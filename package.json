@@ -1,5 +1,5 @@
 {
-  "name": "brocket-demo",
+  "name": "heypink-bot-test",
   "version": "1.0.0",
   "description": "bRocket is a bBot boilerplate for building Rocket.Chat bots",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "src"
   ],
   "repository": "git@github.com:Amazebot/bbot-rocketchat-boilerplate.git",
-  "author": "TK",
+  "author": "felipereyel<contato@reyel.dev>",
   "contributors": [],
   "license": "MIT",
   "private": false,
@@ -27,7 +27,7 @@
     "CUI"
   ],
   "bot": {
-    "name": "brocket",
+    "name": "heypink",
     "message-adapter": "rocketchat",
     "avatar": "https://github.com/Amazebot/bbot-rocketchat-boilerplate/raw/master/img/avatar.png"
   },
