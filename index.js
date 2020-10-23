@@ -1,46 +1,94 @@
 require("dotenv").config()
 const { driver } = require('@rocket.chat/sdk');
-const respmap  = require('./reply');
+const fetch = require('node-fetch');
 
-var myuserid;
+var myUserID;
+var responses = [];
+const usersState = {};
 
-async function runbot () {
+async function runbot() {
+    responses = await getConfigurations(process.env.BOT_ID);
+
     await driver.connect()
-    myuserid = await driver.login();
+    myUserID = await driver.login();
+
     await driver.subscribeToMessages();
-    await driver.reactToMessages( processMessages );
+    await driver.reactToMessages(processMessages);
 
     await driver.sendToRoom(
-      `@${process.env.ROCKETCHAT_USER} is listening ...`, 
-      process.env.GREETING_ROOM
+        `@${process.env.ROCKETCHAT_USER} is listening ...`,
+        process.env.GREETING_ROOM
     );
 }
 
-async function processMessages(err, message, messageOptions) {
-  if (err || message.u._id === myuserid) return;
+async function getConfigurations(botId) {
+    const body = {
+        query: "mutation Something($statementId: ID!, $args: [Arg]) { execute_statement(statement_id: $statementId, args: $args){ rows } }",
+        variables: { statementId: process.env.CONFIGURATION_QUERY_ID, args: [botId] }
+    }
 
-  switch (messageOptions.roomType) {
-    case "c":
-      return respondToChannel(message, messageOptions);
-    case "d":
-      return respondToDM(message, messageOptions);
-    default:
-      return;
-  }
+    const response = await fetch(process.env.TABLES_URL, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { 'Content-Type': 'application/json' },
+    });
+
+    const result = await response.json();
+    return result.data.execute_statement.rows;
+}
+
+async function processMessages(err, message, messageOptions) {
+    if (err || message.u._id === myUserID) return;
+
+    switch (messageOptions.roomType) {
+        case "c":
+            return respondToChannel(message, messageOptions);
+        case "d":
+            return respondToDM(message, messageOptions);
+        default:
+            return;
+    }
 }
 
 async function respondToChannel(message, messageOptions) {
-  if (process.env.RESPOND_TO_CHANNEL !== "true") return;
+    if (process.env.RESPOND_TO_CHANNEL !== "true") return;
+    if (!message.msg.includes(process.env.ROCKETCHAT_USER)) return;
 
-  const response = respmap[message.msg] ?? `@${message.u.username}, sorry didnt get that`;
-  await driver.sendToRoomId(response, message.rid);
+    await driver.sendToRoomId(
+        `@${message.u.username}, DM me please. :smile:`,
+        message.rid
+    );
 }
 
 async function respondToDM(message, messageOptions) {
-  if (process.env.RESPOND_TO_DM !== "true") return;
+    if (process.env.RESPOND_TO_DM !== "true") return;
+    var response;
+    const lastState = usersState[message.u._id];
 
-  const response = respmap[message.msg] ?? `@${message.u.username}, sorry didnt get that`;
-  await driver.sendDirectToUser(response, message.u.username);
+    if (!lastState || lastState.response.event === "nothing" || lastState.response.event === "redirect") {
+        response = responses.filter(resp => resp.parent_id === -1)[0];
+    } 
+    else {
+        response = responses
+            .filter(resp => resp.parent_id === lastState.response.id)
+            .filter(resp => message.msg.includes(resp.opt.trigger))[0];
+
+        if (!response) {
+            await driver.sendDirectToUser(lastState.response.invalid_option_text, message.u.username);
+            return;
+        }
+    }
+
+    await driver.sendDirectToUser(response.template, message.u.username);
+
+    if (response.event === "redirect") {
+        await driver.sendDirectToUser(
+            `REDIRECIONANDO PARA ${response.redirect_to.join(" OU ")}`, 
+            message.u.username
+        );
+    }
+
+    usersState[message.u._id] = { response, createdAt: Date.now() };
 }
 
 runbot();
