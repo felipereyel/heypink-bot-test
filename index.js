@@ -1,10 +1,12 @@
 require("dotenv").config()
 const { driver } = require('@rocket.chat/sdk');
+const { messages } = require("@rocket.chat/sdk/dist/lib/driver");
 const fetch = require('node-fetch');
 
 var myUserID;
 var responses = [];
 const usersState = {};
+const PRIVATE_MESSAGE_REGEX = /(.*)_([0-9]{13})/g;
 
 async function runbot() {
     responses = await getConfigurations(process.env.BOT_ID);
@@ -14,8 +16,6 @@ async function runbot() {
 
     await driver.subscribeToMessages();
     await driver.reactToMessages(processMessages);
-
-    // await driver.sendToRoom(`I am on`, process.env.GREETING_ROOM);
 }
 
 async function getConfigurations(botId) {
@@ -35,76 +35,67 @@ async function getConfigurations(botId) {
 }
 
 async function processMessages(err, message, messageOptions) {
-    if (err || message.u._id === myUserID) return;
+    const isConfigMessage = message.t;
+    const isMyOwn = message.u._id === myUserID;
+    const isNotFromChannel = messageOptions.roomType !== "c";
+    const isNotFromClient = message.u.username !== process.env.CLIENT_USERNAME;
+    if (err || isConfigMessage || isMyOwn || isNotFromChannel || isNotFromClient) return;
 
-    switch (messageOptions.roomType) {
-        case "c":
-            return respondToChannel(message, messageOptions);
-        case "d":
-            return respondToDM(message, messageOptions);
-        default:
-            return;
+    const privateMessageMatches = messageOptions.roomName.match(PRIVATE_MESSAGE_REGEX);
+    if (privateMessageMatches) {
+        return await respondToPrivateMessage(message, messageOptions);
+    } else if (message.msg.includes(process.env.GROUP_MENTION)) {
+        return await respondToGroupMessage(message, messageOptions);
+    }
+
+    return;
+}
+
+async function respondToPrivateMessage(message, messageOptions) {
+    const currentState = stateHandler(message.rid, message);
+    
+    if (currentState.error) {
+        await driver.sendToRoomId(currentState.response.invalid_option_text, message.rid);
+    } else {
+        await driver.sendToRoomId(currentState.response.template, message.rid);
+        if (currentState.response.event === "redirect") {
+            await driver.sendToRoomId(`[PLACEHOLDER] ADICIONANDO AO CANAL ${currentState.response.redirect_to.join(", ")}`, message.rid);
+        }
     }
 }
 
-async function respondToChannel(message, messageOptions) {
-    if (message.u.username !== process.env.CLIENT_USERNAME) return;
-    var response;
-    const lastState = usersState[message.rid];
-
-    if (!lastState || lastState.response.event === "nothing" || lastState.response.event === "redirect") {
-        response = responses.filter(resp => resp.parent_id === -1)[0];
-    } 
-    else {
-        response = responses
-            .filter(resp => resp.parent_id === lastState.response.id)
-            .filter(resp => message.msg.includes(resp.opt.trigger))[0];
-
-        if (!response) {
-            await driver.sendToRoomId(lastState.response.invalid_option_text, message.rid);
-            return;
+async function respondToGroupMessage(message, messageOptions) {
+    const currentState = stateHandler(message.rid, message);
+    
+    if (currentState.error) {
+        await driver.sendToRoomId(currentState.response.invalid_option_text, message.rid);
+    } else {
+        await driver.sendToRoomId(currentState.response.template, message.rid);
+        if (currentState.response.event === "redirect") {
+            await driver.sendToRoomId(`[PLACEHOLDER] ADICIONANDO AO CANAL ${currentState.response.redirect_to.join(", ")}`, message.rid);
         }
     }
-
-    await driver.sendToRoomId(response.template, message.rid);
-
-    if (response.event === "redirect") {
-        await driver.sendToRoomId(`REDIRECIONANDO PARA ${response.redirect_to.join(" OU ")}`, message.rid);
-    }
-
-    usersState[message.rid] = { response, createdAt: Date.now() };
 }
 
-// deprecated
-async function respondToDM(message, messageOptions) {
-    if (process.env.RESPOND_TO_DM !== "true") return;
-    var response;
-    const lastState = usersState[message.u._id];
-
-    if (!lastState || lastState.response.event === "nothing" || lastState.response.event === "redirect") {
+function stateHandler(stateKey, message) {
+    let response;
+    const currentState = usersState[stateKey];
+    
+    if (!currentState || currentState.response.event === "nothing" || currentState.response.event === "redirect") {
         response = responses.filter(resp => resp.parent_id === -1)[0];
-    } 
-    else {
+    } else {
         response = responses
-            .filter(resp => resp.parent_id === lastState.response.id)
+            .filter(resp => resp.parent_id === currentState.response.id)
             .filter(resp => message.msg.includes(resp.opt.trigger))[0];
-
-        if (!response) {
-            await driver.sendDirectToUser(lastState.response.invalid_option_text, message.u.username);
-            return;
-        }
     }
 
-    await driver.sendDirectToUser(response.template, message.u.username);
-
-    if (response.event === "redirect") {
-        await driver.sendDirectToUser(
-            `REDIRECIONANDO PARA ${response.redirect_to.join(" OU ")}`, 
-            message.u.username
-        );
+    if (response) {
+        usersState[stateKey] = { response, createdAt: Date.now() };
+    } else {
+        usersState[stateKey] = { ...currentState, error: true };
     }
 
-    usersState[message.u._id] = { response, createdAt: Date.now() };
+    return usersState[stateKey];
 }
 
 runbot();
