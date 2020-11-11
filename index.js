@@ -1,6 +1,5 @@
 require("dotenv").config()
 const { driver } = require('@rocket.chat/sdk');
-const { messages } = require("@rocket.chat/sdk/dist/lib/driver");
 const fetch = require('node-fetch');
 
 var myUserID;
@@ -10,6 +9,8 @@ const PRIVATE_MESSAGE_REGEX = /(.*)_([0-9]{13})/g;
 
 async function runbot() {
     responses = await getConfigurations(process.env.BOT_ID);
+
+    // canais dinamicos : so escuto o que são minhas
 
     await driver.connect();
     myUserID = await driver.login();
@@ -37,9 +38,9 @@ async function getConfigurations(botId) {
 async function processMessages(err, message, messageOptions) {
     const isConfigMessage = message.t;
     const isMyOwn = message.u._id === myUserID;
-    const isNotFromChannel = messageOptions.roomType !== "c";
-    const isNotFromClient = message.u.username !== process.env.CLIENT_USERNAME;
-    if (err || isConfigMessage || isMyOwn || isNotFromChannel || isNotFromClient) return;
+    const isNotFromChannel = messageOptions.roomType !== "c"; // pode ser DM
+    const isNotFromClient = message.u.username !== process.env.CLIENT_USERNAME; // qualquer usuário
+    if (err || isConfigMessage || isMyOwn || isNotFromChannel || isNotFromCrockelient) return;
 
     const privateMessageMatches = messageOptions.roomName.match(PRIVATE_MESSAGE_REGEX);
     if (privateMessageMatches) {
@@ -65,7 +66,7 @@ async function respondToPrivateMessage(message, messageOptions) {
 }
 
 async function respondToGroupMessage(message, messageOptions) {
-    const currentState = stateHandler(message.rid, message);
+    const currentState = stateHandler(message.rid, message); // ao inves do rid
     
     if (currentState.error) {
         await driver.sendToRoomId(currentState.response.invalid_option_text, message.rid);
@@ -77,7 +78,7 @@ async function respondToGroupMessage(message, messageOptions) {
     }
 }
 
-function stateHandler(stateKey, message) {
+function stateHandler(stateKey, message) { // checar se ja foi resolvido gerenciamento de estado
     let response;
     const currentState = usersState[stateKey];
     
