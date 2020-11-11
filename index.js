@@ -20,38 +20,28 @@ async function getConfigurations(botId) {
     return result.data.execute_statement.rows;
 }
 
-function optionMatcherBuilder(response) {
-    return (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger);
-}
+const optionMatcherBuilder = (response) => (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger);
 
-function optionsCallbackBuilder(response) {
-    return (b) => {
-        b.user.state = response;
-        b.respond(response.template);
-    }
-}
+const fallbackMatcherBuilder = (response) => (b) => b.user.state.id === response.id;
 
-function nothingCallbackBuilder(response) {
-    return (b) => {
-        b.user.state = {};
-        b.respond(response.template);
-    }
-}
+const optionsCallbackBuilder = (response) => (b) => {
+    b.user.state = response;
+    b.respond(response.template);
+};
 
-function redirectCallbackBuilder(response) {
-    return (b) => {
-        b.user.state = {};
-        b.respond(response.template, "REDIRECT PLACEHOLDER");
-    }
-}
+const nothingCallbackBuilder = (response) => (b) => {
+    b.user.state = {};
+    b.respond(response.template);
+};
 
-function fallbackMatcherBuilder(response) {
-    return (b) => b.user.state.id === response.id;
-}
+const redirectCallbackBuilder = (response) => (b) => {
+    b.user.state = {};
+    b.respond(response.template, "REDIRECT PLACEHOLDER");
+};
 
-function fallbackCallbackBuilder(response) {
-    return (b) => b.respond(response.invalid_option_text)
-}
+const fallbackCallbackBuilder = (response) => (b) => {
+    b.respond(response.invalid_option_text)
+};
 
 async function runBot() {
     const responses = await getConfigurations(process.env.BOT_ID);
