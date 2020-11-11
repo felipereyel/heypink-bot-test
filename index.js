@@ -20,6 +20,39 @@ async function getConfigurations(botId) {
     return result.data.execute_statement.rows;
 }
 
+function optionMatcherBuilder(response) {
+    return (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger);
+}
+
+function optionsCallbackBuilder(response) {
+    return (b) => {
+        b.user.state = response;
+        b.respond(response.template);
+    }
+}
+
+function nothingCallbackBuilder(response) {
+    return (b) => {
+        b.user.state = {};
+        b.respond(response.template);
+    }
+}
+
+function redirectCallbackBuilder(response) {
+    return (b) => {
+        b.user.state = {};
+        b.respond(response.template, "REDIRECT PLACEHOLDER");
+    }
+}
+
+function fallbackMatcherBuilder(response) {
+    return (b) => b.user.state.id === response.id;
+}
+
+function fallbackCallbackBuilder(response) {
+    return (b) => b.respond(response.invalid_option_text)
+}
+
 async function runBot() {
     const responses = await getConfigurations(process.env.BOT_ID);
 
@@ -33,58 +66,31 @@ async function runBot() {
         (b) => b.respond(JSON.stringify(b.user.state={}, null, 4))
     );
     
-    // set root state
+    // root state
     const rootResponse = responses.filter(r => r.parent_id === -1)[0];
-    bot.global.custom(
-        (b) => isEmpty(b.user.state),
-        (b) => {
-            b.user.state = rootResponse;
-            b.respond(rootResponse.template);
-        }
-    );
+    bot.global.custom((b) => isEmpty(b.user.state), optionsCallbackBuilder(rootResponse));
         
-    // set options states
+    // options states
     const optionsResponses = responses.filter(r => r.event === "options");
     for (const response of optionsResponses) {
-        bot.global.custom(
-            (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger), 
-            (b) => {
-                b.user.state = response;
-                b.respond(response.template);
-            }
-        );
+        bot.global.custom(optionMatcherBuilder(response), optionsCallbackBuilder(response));
     }
         
-    // set nothing states
+    // nothing states
     const nothingResponses = responses.filter(r => r.event === "nothing");
     for (const response of nothingResponses) {
-        bot.global.custom(
-            (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger), 
-            (b) => {
-                b.user.state = {};
-                b.respond(response.template);
-            }
-        );
+        bot.global.custom(optionMatcherBuilder(response), nothingCallbackBuilder(response));
     }
         
-    // set redirect states
+    // redirect states
     const redirectResponses = responses.filter(r => r.event === "redirect");
     for (const response of redirectResponses) {
-        bot.global.custom(
-            (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger), 
-            (b) => {
-                b.user.state = {};
-                b.respond(response.template, "REDIRECT PLACEHOLDER");
-            }
-        );
+        bot.global.custom(optionMatcherBuilder(response), redirectCallbackBuilder(response));
     }
 
-    // set fallbacks
+    // fallbacks
     for (const response of optionsResponses) {
-        bot.global.custom(
-            (b) => b.user.state.id === response.id, 
-            (b) => b.respond(response.invalid_option_text)
-        );
+        bot.global.custom(fallbackMatcherBuilder(response), fallbackCallbackBuilder(response));
     }
 
     bot.start(); // 🚀
