@@ -1,23 +1,8 @@
 require("dotenv").config()
-const { driver } = require('@rocket.chat/sdk');
+const { isEmpty } = require("lodash");
+const bot = require('bbot');
 const fetch = require('node-fetch');
-
-var myUserID;
-var responses = [];
-const usersState = {};
 const PRIVATE_MESSAGE_REGEX = /(.*)_([0-9]{13})/g;
-
-async function runbot() {
-    responses = await getConfigurations(process.env.BOT_ID);
-
-    // canais dinamicos : so escuto o que são minhas
-
-    await driver.connect();
-    myUserID = await driver.login();
-
-    await driver.subscribeToMessages();
-    await driver.reactToMessages(processMessages);
-}
 
 async function getConfigurations(botId) {
     const body = {
@@ -35,68 +20,74 @@ async function getConfigurations(botId) {
     return result.data.execute_statement.rows;
 }
 
-async function processMessages(err, message, messageOptions) {
-    const isConfigMessage = message.t;
-    const isMyOwn = message.u._id === myUserID;
-    const isNotFromChannel = messageOptions.roomType !== "c"; // pode ser DM
-    const isNotFromClient = message.u.username !== process.env.CLIENT_USERNAME; // qualquer usuário
-    if (err || isConfigMessage || isMyOwn || isNotFromChannel || isNotFromCrockelient) return;
+async function runBot() {
+    const responses = await getConfigurations(process.env.BOT_ID);
 
-    const privateMessageMatches = messageOptions.roomName.match(PRIVATE_MESSAGE_REGEX);
-    if (privateMessageMatches) {
-        return await respondToPrivateMessage(message, messageOptions);
-    } else if (message.msg.includes(process.env.GROUP_MENTION)) {
-        return await respondToGroupMessage(message, messageOptions);
-    }
-
-    return;
-}
-
-async function respondToPrivateMessage(message, messageOptions) {
-    const currentState = stateHandler(message.rid, message);
+    // debug
+    bot.global.custom(
+        (b) => b.text.includes("state"), 
+        (b) => b.respond(JSON.stringify(b.user.state, null, 4))
+    );
+    bot.global.custom(
+        (b) => b.text.includes("reset"), 
+        (b) => b.respond(JSON.stringify(b.user.state={}, null, 4))
+    );
     
-    if (currentState.error) {
-        await driver.sendToRoomId(currentState.response.invalid_option_text, message.rid);
-    } else {
-        await driver.sendToRoomId(currentState.response.template, message.rid);
-        if (currentState.response.event === "redirect") {
-            await driver.sendToRoomId(`[PLACEHOLDER] ADICIONANDO AO CANAL ${currentState.response.redirect_to.join(", ")}`, message.rid);
+    // set root state
+    const rootResponse = responses.filter(r => r.parent_id === -1)[0];
+    bot.global.custom(
+        (b) => isEmpty(b.user.state),
+        (b) => {
+            b.user.state = rootResponse;
+            b.respond(rootResponse.template);
         }
+    );
+        
+    // set options states
+    const optionsResponses = responses.filter(r => r.event === "options");
+    for (const response of optionsResponses) {
+        bot.global.custom(
+            (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger), 
+            (b) => {
+                b.user.state = response;
+                b.respond(response.template);
+            }
+        );
     }
+        
+    // set nothing states
+    const nothingResponses = responses.filter(r => r.event === "nothing");
+    for (const response of nothingResponses) {
+        bot.global.custom(
+            (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger), 
+            (b) => {
+                b.user.state = {};
+                b.respond(response.template);
+            }
+        );
+    }
+        
+    // set redirect states
+    const redirectResponses = responses.filter(r => r.event === "redirect");
+    for (const response of redirectResponses) {
+        bot.global.custom(
+            (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger), 
+            (b) => {
+                b.user.state = {};
+                b.respond(response.template, "REDIRECT PLACEHOLDER");
+            }
+        );
+    }
+
+    // set fallbacks
+    for (const response of optionsResponses) {
+        bot.global.custom(
+            (b) => b.user.state.id === response.id, 
+            (b) => b.respond(response.invalid_option_text)
+        );
+    }
+
+    bot.start(); // 🚀
 }
 
-async function respondToGroupMessage(message, messageOptions) {
-    const currentState = stateHandler(message.rid, message); // ao inves do rid
-    
-    if (currentState.error) {
-        await driver.sendToRoomId(currentState.response.invalid_option_text, message.rid);
-    } else {
-        await driver.sendToRoomId(currentState.response.template, message.rid);
-        if (currentState.response.event === "redirect") {
-            await driver.sendToRoomId(`[PLACEHOLDER] ADICIONANDO AO CANAL ${currentState.response.redirect_to.join(", ")}`, message.rid);
-        }
-    }
-}
-
-function stateHandler(stateKey, message) { // checar se ja foi resolvido gerenciamento de estado
-    let response;
-    const currentState = usersState[stateKey];
-    
-    if (!currentState || currentState.response.event === "nothing" || currentState.response.event === "redirect") {
-        response = responses.filter(resp => resp.parent_id === -1)[0];
-    } else {
-        response = responses
-            .filter(resp => resp.parent_id === currentState.response.id)
-            .filter(resp => message.msg.includes(resp.opt.trigger))[0];
-    }
-
-    if (response) {
-        usersState[stateKey] = { response, createdAt: Date.now() };
-    } else {
-        usersState[stateKey] = { ...currentState, error: true };
-    }
-
-    return usersState[stateKey];
-}
-
-runbot();
+runBot();
