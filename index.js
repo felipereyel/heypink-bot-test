@@ -4,7 +4,7 @@ const bot = require('bbot');
 const fetch = require('node-fetch');
 const PRIVATE_MESSAGE_REGEX = /(.*)_([0-9]{13})/g;
 
-async function getConfigurations(botId) {
+const getConfigurations = async (botId) => {
     const body = {
         query: "mutation Something($statementId: ID!, $args: [Arg]) { execute_statement(statement_id: $statementId, args: $args){ rows } }",
         variables: { statementId: process.env.CONFIGURATION_QUERY_ID, args: [botId] }
@@ -34,9 +34,11 @@ const isNotDirect = (message) => {
     return !isRCDM && !isWAPrivate && !isRCMention && !isWAMention;
 };
 
+const iMatch = (str, exp) => str?.match(new RegExp(exp, "i"));
+
 const rootMatcherBuilder = (response) => (message) => isEmpty(message.user.state);
 
-const optionMatcherBuilder = (response) => (message) => message.user.state.id === response.parent_id && message.text?.includes(response.opt.trigger);
+const optionMatcherBuilder = (response) => (message) => message.user.state.id === response.parent_id && iMatch(message.text, response.opt.trigger);
 
 const fallbackMatcherBuilder = (response) => (message) => message.user.state.id === response.id;
 
@@ -61,7 +63,7 @@ const fallbackCallbackBuilder = (response) => (b) => {
     b.respond(`${response.invalid_option_text}\n\nDigite somente a *primeira parte* da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
-async function runBot() {
+const runBot = async () => {
     const responses = await getConfigurations(process.env.BOT_ID);
 
     // purge non direct messages
@@ -69,11 +71,11 @@ async function runBot() {
 
     // debug
     bot.global.custom(
-        (message) => message.text.includes("state"), 
+        (message) => iMatch(message.text, "state"), 
         (b) => b.respond(JSON.stringify(b.user.state, null, 4))
     );
     bot.global.custom(
-        (message) => message.text.includes("reset"), 
+        (message) => iMatch(message.text, "reset"), 
         (b) => b.respond(JSON.stringify(b.user.state={}, null, 4))
     );
     
