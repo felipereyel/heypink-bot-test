@@ -26,9 +26,19 @@ async function getConfigurations(botId) {
     return responses;
 }
 
-const optionMatcherBuilder = (response) => (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger);
+const isNotDirect = (message) => {
+    const isRCDM = message.user.room.type === "d";
+    const isWAPrivate = message.user.room.name?.match(PRIVATE_MESSAGE_REGEX);
+    const isRCMention = message.text?.includes(process.env.ROCKETCHAT_USER);
+    const isWAMention = message.text?.includes(process.env.WHATSAPP_NUMBER);
+    return !isRCDM && !isWAPrivate && !isRCMention && !isWAMention;
+};
 
-const fallbackMatcherBuilder = (response) => (b) => b.user.state.id === response.id;
+const rootMatcherBuilder = (response) => (message) => isEmpty(message.user.state);
+
+const optionMatcherBuilder = (response) => (message) => message.user.state.id === response.parent_id && message.text?.includes(response.opt.trigger);
+
+const fallbackMatcherBuilder = (response) => (message) => message.user.state.id === response.id;
 
 const optionReplyBuilder = (response) => response.options.map(r => `*${r.opt.trigger}* - ${r.opt.description}`).join("\n");
 
@@ -54,19 +64,22 @@ const fallbackCallbackBuilder = (response) => (b) => {
 async function runBot() {
     const responses = await getConfigurations(process.env.BOT_ID);
 
+    // purge non direct messages
+    bot.global.custom(isNotDirect, (b) => {});
+
     // debug
     bot.global.custom(
-        (b) => b.text.includes("state"), 
+        (message) => message.text.includes("state"), 
         (b) => b.respond(JSON.stringify(b.user.state, null, 4))
     );
     bot.global.custom(
-        (b) => b.text.includes("reset"), 
+        (message) => message.text.includes("reset"), 
         (b) => b.respond(JSON.stringify(b.user.state={}, null, 4))
     );
     
     // root state
     const rootResponse = responses.filter(r => r.parent_id === -1)[0];
-    bot.global.custom((b) => isEmpty(b.user.state), optionsCallbackBuilder(rootResponse));
+    bot.global.custom(rootMatcherBuilder(rootResponse), optionsCallbackBuilder(rootResponse));
         
     // options states
     const optionsResponses = responses.filter(r => r.event === "options");
