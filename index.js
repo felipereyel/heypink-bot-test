@@ -1,25 +1,10 @@
 require("dotenv").config()
-const { driver } = require('@rocket.chat/sdk');
+const { isEmpty } = require("lodash");
+const bot = require('bbot');
 const fetch = require('node-fetch');
-
-var myUserID;
-var responses = [];
-const usersState = {};
 const PRIVATE_MESSAGE_REGEX = /(.*)_([0-9]{13})/g;
 
-async function runbot() {
-    responses = await getConfigurations(process.env.BOT_ID);
-
-    // canais dinamicos : so escuto o que são minhas
-
-    await driver.connect();
-    myUserID = await driver.login();
-
-    await driver.subscribeToMessages();
-    await driver.reactToMessages(processMessages);
-}
-
-async function getConfigurations(botId) {
+const getConfigurations = async (botId) => {
     const body = {
         query: "mutation Something($statementId: ID!, $args: [Arg]) { execute_statement(statement_id: $statementId, args: $args){ rows } }",
         variables: { statementId: process.env.CONFIGURATION_QUERY_ID, args: [botId] }
@@ -32,71 +17,96 @@ async function getConfigurations(botId) {
     });
 
     const result = await response.json();
-    return result.data.execute_statement.rows;
-}
+    const responses = result.data.execute_statement.rows;
 
-async function processMessages(err, message, messageOptions) {
-    const isConfigMessage = message.t;
-    const isMyOwn = message.u._id === myUserID;
-    const isNotFromChannel = messageOptions.roomType !== "c"; // pode ser DM
-    const isNotFromClient = message.u.username !== process.env.CLIENT_USERNAME; // qualquer usuário
-    if (err || isConfigMessage || isMyOwn || isNotFromChannel || isNotFromCrockelient) return;
-
-    const privateMessageMatches = messageOptions.roomName.match(PRIVATE_MESSAGE_REGEX);
-    if (privateMessageMatches) {
-        return await respondToPrivateMessage(message, messageOptions);
-    } else if (message.msg.includes(process.env.GROUP_MENTION)) {
-        return await respondToGroupMessage(message, messageOptions);
+    for (const response of responses) {
+        response.options = responses.filter(r => r.parent_id === response.id);
     }
 
-    return;
+    return responses;
 }
 
-async function respondToPrivateMessage(message, messageOptions) {
-    const currentState = stateHandler(message.rid, message);
+const isNotDirect = (message) => {
+    const isRCDM = message.user.room.type === "d";
+    const isWAPrivate = message.user.room.name?.match(PRIVATE_MESSAGE_REGEX);
+    const isRCMention = message.text?.includes(process.env.ROCKETCHAT_USER);
+    const isWAMention = message.text?.includes(process.env.WHATSAPP_NUMBER);
+    return !isRCDM && !isWAPrivate && !isRCMention && !isWAMention;
+};
+
+const iMatch = (str, exp) => str?.match(new RegExp(exp, "i"));
+
+const rootMatcherBuilder = (response) => (message) => isEmpty(message.user.state);
+
+const optionMatcherBuilder = (response) => (message) => message.user.state.id === response.parent_id && iMatch(message.text, response.opt.trigger);
+
+const fallbackMatcherBuilder = (response) => (message) => message.user.state.id === response.id;
+
+const optionReplyBuilder = (response) => response.options.map(r => `*${r.opt.trigger}* - ${r.opt.description}`).join("\n");
+
+const optionsCallbackBuilder = (response) => (b) => {
+    b.user.state = response;
+    b.respond(`${response.template}\n\nDigite somente a primeira parte da opção desejada:\n${optionReplyBuilder(response)}`);
+};
+
+const nothingCallbackBuilder = (response) => (b) => {
+    b.user.state = {};
+    b.respond(response.template);
+};
+
+const redirectCallbackBuilder = (response) => (b) => {
+    b.user.state = {};
+    b.respond(response.template, "REDIRECT PLACEHOLDER");
+};
+
+const fallbackCallbackBuilder = (response) => (b) => {
+    b.respond(`${response.invalid_option_text}\n\nDigite somente a *primeira parte* da opção desejada:\n${optionReplyBuilder(response)}`);
+};
+
+const runBot = async () => {
+    const responses = await getConfigurations(process.env.BOT_ID);
+
+    // purge non direct messages
+    bot.global.custom(isNotDirect, (b) => {});
+
+    // debug
+    bot.global.custom(
+        (message) => iMatch(message.text, "state"), 
+        (b) => b.respond(JSON.stringify(b.user.state, null, 4))
+    );
+    bot.global.custom(
+        (message) => iMatch(message.text, "reset"), 
+        (b) => b.respond(JSON.stringify(b.user.state={}, null, 4))
+    );
     
-    if (currentState.error) {
-        await driver.sendToRoomId(currentState.response.invalid_option_text, message.rid);
-    } else {
-        await driver.sendToRoomId(currentState.response.template, message.rid);
-        if (currentState.response.event === "redirect") {
-            await driver.sendToRoomId(`[PLACEHOLDER] ADICIONANDO AO CANAL ${currentState.response.redirect_to.join(", ")}`, message.rid);
-        }
+    // root state
+    const rootResponse = responses.filter(r => r.parent_id === -1)[0];
+    bot.global.custom(rootMatcherBuilder(rootResponse), optionsCallbackBuilder(rootResponse));
+        
+    // options states
+    const optionsResponses = responses.filter(r => r.event === "options");
+    for (const response of optionsResponses) {
+        bot.global.custom(optionMatcherBuilder(response), optionsCallbackBuilder(response));
     }
+        
+    // nothing states
+    const nothingResponses = responses.filter(r => r.event === "nothing");
+    for (const response of nothingResponses) {
+        bot.global.custom(optionMatcherBuilder(response), nothingCallbackBuilder(response));
+    }
+        
+    // redirect states
+    const redirectResponses = responses.filter(r => r.event === "redirect");
+    for (const response of redirectResponses) {
+        bot.global.custom(optionMatcherBuilder(response), redirectCallbackBuilder(response));
+    }
+
+    // fallbacks
+    for (const response of optionsResponses) {
+        bot.global.custom(fallbackMatcherBuilder(response), fallbackCallbackBuilder(response));
+    }
+
+    bot.start(); // 🚀
 }
 
-async function respondToGroupMessage(message, messageOptions) {
-    const currentState = stateHandler(message.rid, message); // ao inves do rid
-    
-    if (currentState.error) {
-        await driver.sendToRoomId(currentState.response.invalid_option_text, message.rid);
-    } else {
-        await driver.sendToRoomId(currentState.response.template, message.rid);
-        if (currentState.response.event === "redirect") {
-            await driver.sendToRoomId(`[PLACEHOLDER] ADICIONANDO AO CANAL ${currentState.response.redirect_to.join(", ")}`, message.rid);
-        }
-    }
-}
-
-function stateHandler(stateKey, message) { // checar se ja foi resolvido gerenciamento de estado
-    let response;
-    const currentState = usersState[stateKey];
-    
-    if (!currentState || currentState.response.event === "nothing" || currentState.response.event === "redirect") {
-        response = responses.filter(resp => resp.parent_id === -1)[0];
-    } else {
-        response = responses
-            .filter(resp => resp.parent_id === currentState.response.id)
-            .filter(resp => message.msg.includes(resp.opt.trigger))[0];
-    }
-
-    if (response) {
-        usersState[stateKey] = { response, createdAt: Date.now() };
-    } else {
-        usersState[stateKey] = { ...currentState, error: true };
-    }
-
-    return usersState[stateKey];
-}
-
-runbot();
+runBot();

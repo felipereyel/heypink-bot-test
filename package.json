@@ -4,14 +4,14 @@
   "description": "[create-user]: https://rocket.chat/docs/bots/creating-bot-users/ [configure-bot]: https://rocket.chat/docs/bots/configure-bot-environment/",
   "main": "index.js",
   "dependencies": {
-    "@rocket.chat/sdk": "^0.2.9-2",
+    "bbot": "^1.3.0",
     "dotenv": "^8.2.0",
+    "lodash": "^4.17.20",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {},
   "scripts": {
-    "start": "node --inspect index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
