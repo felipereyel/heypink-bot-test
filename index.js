@@ -17,16 +17,24 @@ async function getConfigurations(botId) {
     });
 
     const result = await response.json();
-    return result.data.execute_statement.rows;
+    const responses = result.data.execute_statement.rows;
+
+    for (const response of responses) {
+        response.options = responses.filter(r => r.parent_id === response.id);
+    }
+
+    return responses;
 }
 
 const optionMatcherBuilder = (response) => (b) => b.user.state.id === response.parent_id && b.text.includes(response.opt.trigger);
 
 const fallbackMatcherBuilder = (response) => (b) => b.user.state.id === response.id;
 
+const optionReplyBuilder = (response) => response.options.map(r => `*${r.opt.trigger}* - ${r.opt.description}`).join("\n");
+
 const optionsCallbackBuilder = (response) => (b) => {
     b.user.state = response;
-    b.respond(response.template);
+    b.respond(`${response.template}\n\nDigite somente a primeira parte da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
 const nothingCallbackBuilder = (response) => (b) => {
@@ -40,7 +48,7 @@ const redirectCallbackBuilder = (response) => (b) => {
 };
 
 const fallbackCallbackBuilder = (response) => (b) => {
-    b.respond(response.invalid_option_text)
+    b.respond(`${response.invalid_option_text}\n\nDigite somente a *primeira parte* da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
 async function runBot() {
