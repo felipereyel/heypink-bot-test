@@ -33,7 +33,7 @@ const getConfigurations = async (botId) => {
 const isNotDirect = (message) => {
     const isRCDM = message.user.room.type === "d";
     const isWAPrivate = message.user.room.name?.match(PRIVATE_MESSAGE_REGEX);
-    const isRCMention = message.text?.includes(`@${process.env.ROCKETCHAT_USER}`);
+    const isRCMention = message.text?.includes(`${process.env.ROCKETCHAT_USER}`);
     const isWAMention = message.text?.includes(`@${process.env.WHATSAPP_NUMBER}`);
     const isManageMessage = message.event === "enter" || message.event === "leave";
     return (!isRCDM && !isWAPrivate && !isRCMention && !isWAMention) || isManageMessage;
@@ -168,10 +168,6 @@ runBot();
 
 /*
 TODOS:
-- add departmentQueue -- DONE
-- mensagens de entrar e sair do canal estao trigando o bot -- DONE HACK MODE
-- room level state, not user level -- dificul AF -- DONE
-- BOT entrando dps da criacao do canal
 - state timeout
 - max retrys?
 */
