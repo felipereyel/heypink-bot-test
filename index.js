@@ -119,3 +119,11 @@ const runBot = async () => {
 }
 
 runBot();
+
+/*
+TODOS:
+- add departmentQueue
+- state timeout
+- room level state, not user level
+- what happens after someone answered the channel and how to sync the state of the bot to this event? 
+*/
