@@ -28,9 +28,9 @@ const getConfigurations = async (botId) => {
     return responses;
 }
 
-const isNotDirect = (message) => {
-    console.log(JSON.stringify({...message, state: null}, null, 4));
+// no custom so tem acesso ao TextMessage que n tem acesso ao estado
 
+const isNotDirect = (message) => {
     const isRCDM = message.user.room.type === "d";
     const isWAPrivate = message.user.room.name?.match(PRIVATE_MESSAGE_REGEX);
     const isRCMention = message.text?.includes(`@${process.env.ROCKETCHAT_USER}`);
@@ -41,28 +41,28 @@ const isNotDirect = (message) => {
 
 const resetMatcher = (message) => message.text === process.env.ROCKETCHAT_USER;
 
-const rootMatcherBuilder = (response) => (message) => isEmpty(message.user.state);
+const rootMatcherBuilder = (response) => (message) => isEmpty(bot.memory.get(message.user.room.id));
 
-const optionMatcherBuilder = (response) => (message) => message.user.state.id === response.parent_id && iMatch(message.text, response.opt.trigger);
+const optionMatcherBuilder = (response) => (message) => bot.memory.get(message.user.room.id).id === response.parent_id && iMatch(message.text, response.opt.trigger);
 
-const fallbackMatcherBuilder = (response) => (message) => message.user.state.id === response.id;
+const fallbackMatcherBuilder = (response) => (message) => bot.memory.get(message.user.room.id).id === response.id;
 
 const optionReplyBuilder = (response) => response.options.map(r => `*${r.opt.trigger}* - ${r.opt.description}`).join("\n");
 
 const optionsCallbackBuilder = (response) => (b) => {
-    b.user.state = response;
+    b.bot.memory.set(b.message.user.room.id, response);
     b.respond(`${response.template}\n\nDigite somente a primeira parte da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
 const nothingCallbackBuilder = (response) => (b) => {
-    b.user.state = {};
+    b.bot.memory.unset(b.message.user.room.id);
     b.respond(response.template);
 };
 
 const redirectCallbackBuilder = (response) => (b) => {
-    b.user.state = response;
+    b.bot.memory.set(b.message.user.room.id, response);
     b.respond(response.template);
-    bot.adapters.message.api.post('rooms.setCustomFields', {
+    bot.adapters.message.api.post('rooms.setCustomFields', { // bot => b.bot
         rid: b.user.room.id,
         data: { departmentQueue: "GENERAL" }
     })
@@ -89,19 +89,19 @@ const runBot = async () => {
     // reset state when added or removed
     bot.global.custom(
         resetMatcher, 
-        (b) => b.user.state = {}, 
+        (b) => b.bot.memory.unset(b.message.user.room.id),
         { id: "reset_when_enter_or_leave" }
     );
 
     // debug
     bot.global.custom(
         (message) => iMatch(message.text, "state"), 
-        (b) => b.respond(JSON.stringify({ room: b.user.room, stateId: b.user.state.id }, null, 4)), 
+        (b) => b.respond(JSON.stringify(b.bot.memory.get(b.message.user.room.id), null, 4)), 
         { id: "debug_state" }
     );
     bot.global.custom(
         (message) => iMatch(message.text, "reset"), 
-        (b) => b.respond(JSON.stringify(b.user.state={}, null, 4)), 
+        (b) => b.bot.memory.unset(b.message.user.room.id) && b.respond("👍"), 
         { id: "debug_reset" }
     );
     
@@ -170,7 +170,8 @@ runBot();
 TODOS:
 - add departmentQueue -- DONE
 - mensagens de entrar e sair do canal estao trigando o bot -- DONE HACK MODE
-- room level state, not user level -- dificul AF
+- room level state, not user level -- dificul AF -- DONE
 - BOT entrando dps da criacao do canal
 - state timeout
+- max retrys?
 */
