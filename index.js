@@ -2,7 +2,9 @@ require("dotenv").config()
 const { isEmpty } = require("lodash");
 const bot = require('bbot');
 const fetch = require('node-fetch');
-const PRIVATE_MESSAGE_REGEX = /(.*)_([0-9]{13})/g;
+const PRIVATE_MESSAGE_REGEX = /(.*)_([0-9]{10,13})/g;
+
+const iMatch = (str, exp) => str?.match(new RegExp(exp, "i"));
 
 const getConfigurations = async (botId) => {
     const body = {
@@ -27,14 +29,17 @@ const getConfigurations = async (botId) => {
 }
 
 const isNotDirect = (message) => {
+    console.log(JSON.stringify({...message, state: null}, null, 4));
+
     const isRCDM = message.user.room.type === "d";
     const isWAPrivate = message.user.room.name?.match(PRIVATE_MESSAGE_REGEX);
-    const isRCMention = message.text?.includes(process.env.ROCKETCHAT_USER);
-    const isWAMention = message.text?.includes(process.env.WHATSAPP_NUMBER);
-    return !isRCDM && !isWAPrivate && !isRCMention && !isWAMention;
+    const isRCMention = message.text?.includes(`@${process.env.ROCKETCHAT_USER}`);
+    const isWAMention = message.text?.includes(`@${process.env.WHATSAPP_NUMBER}`);
+    const isManageMessage = message.event === "enter" || message.event === "leave";
+    return (!isRCDM && !isWAPrivate && !isRCMention && !isWAMention) || isManageMessage;
 };
 
-const iMatch = (str, exp) => str?.match(new RegExp(exp, "i"));
+const resetMatcher = (message) => message.text === process.env.ROCKETCHAT_USER;
 
 const rootMatcherBuilder = (response) => (message) => isEmpty(message.user.state);
 
@@ -56,7 +61,11 @@ const nothingCallbackBuilder = (response) => (b) => {
 
 const redirectCallbackBuilder = (response) => (b) => {
     b.user.state = response;
-    b.respond(response.template, "REDIRECT PLACEHOLDER");
+    b.respond(response.template);
+    bot.adapters.message.api.post('rooms.setCustomFields', {
+        rid: b.user.room.id,
+        data: { departmentQueue: "GENERAL" }
+    })
 };
 
 const optionsFallbackBuilder = (response) => (b) => {
@@ -71,48 +80,85 @@ const runBot = async () => {
     const responses = await getConfigurations(process.env.BOT_ID);
 
     // purge non direct messages
-    bot.global.custom(isNotDirect, (b) => {});
+    bot.global.custom(
+        isNotDirect, 
+        (b) => {}, 
+        { id: "purge_non_direct_messages" }
+    );
+
+    // reset state when added or removed
+    bot.global.custom(
+        resetMatcher, 
+        (b) => b.user.state = {}, 
+        { id: "reset_when_enter_or_leave" }
+    );
 
     // debug
     bot.global.custom(
         (message) => iMatch(message.text, "state"), 
-        (b) => b.respond(JSON.stringify(b.user.state, null, 4))
+        (b) => b.respond(JSON.stringify({ room: b.user.room, stateId: b.user.state.id }, null, 4)), 
+        { id: "debug_state" }
     );
     bot.global.custom(
         (message) => iMatch(message.text, "reset"), 
-        (b) => b.respond(JSON.stringify(b.user.state={}, null, 4))
+        (b) => b.respond(JSON.stringify(b.user.state={}, null, 4)), 
+        { id: "debug_reset" }
     );
     
     // root state
     const rootResponse = responses.filter(r => r.parent_id === -1)[0];
-    bot.global.custom(rootMatcherBuilder(rootResponse), optionsCallbackBuilder(rootResponse));
+    bot.global.custom(
+        rootMatcherBuilder(rootResponse), 
+        optionsCallbackBuilder(rootResponse), 
+        { id: "root_message" }
+    );
         
     // nothing states
     const nothingResponses = responses.filter(r => r.event === "nothing");
     for (const response of nothingResponses) {
-        bot.global.custom(optionMatcherBuilder(response), nothingCallbackBuilder(response));
+        bot.global.custom(
+            optionMatcherBuilder(response), 
+            nothingCallbackBuilder(response), 
+            { id: `${response.opt.trigger}_trigger_message` }
+        );
     }
         
     // options states
     const optionsResponses = responses.filter(r => r.event === "options");
     for (const response of optionsResponses) {
-        bot.global.custom(optionMatcherBuilder(response), optionsCallbackBuilder(response));
+        bot.global.custom(
+            optionMatcherBuilder(response), 
+            optionsCallbackBuilder(response), 
+            { id: `${response.opt.trigger}_trigger_message` }
+        );
     }
         
     // redirect states
     const redirectResponses = responses.filter(r => r.event === "redirect");
     for (const response of redirectResponses) {
-        bot.global.custom(optionMatcherBuilder(response), redirectCallbackBuilder(response));
+        bot.global.custom(
+            optionMatcherBuilder(response), 
+            redirectCallbackBuilder(response), 
+            { id: `${response.opt.trigger}_trigger_message` }
+        );
     }
 
     // options fallbacks
     for (const response of optionsResponses) {
-        bot.global.custom(fallbackMatcherBuilder(response), optionsFallbackBuilder(response));
+        bot.global.custom(
+            fallbackMatcherBuilder(response), 
+            optionsFallbackBuilder(response), 
+            { id: `${response.opt.trigger}_fallback_message` }
+        );
     }
 
     // redirect fallbacks
     for (const response of redirectResponses) {
-        bot.global.custom(fallbackMatcherBuilder(response), redirectFallbackBuilder(response));
+        bot.global.custom(
+            fallbackMatcherBuilder(response), 
+            redirectFallbackBuilder(response), 
+            { id: `${response.opt.trigger}_fallback_message` }
+        );
     }
 
     bot.start(); // 🚀
@@ -122,8 +168,9 @@ runBot();
 
 /*
 TODOS:
-- add departmentQueue
+- add departmentQueue -- DONE
+- mensagens de entrar e sair do canal estao trigando o bot -- DONE HACK MODE
+- room level state, not user level -- dificul AF
+- BOT entrando dps da criacao do canal
 - state timeout
-- room level state, not user level
-- what happens after someone answered the channel and how to sync the state of the bot to this event? 
 */
