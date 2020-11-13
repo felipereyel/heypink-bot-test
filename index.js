@@ -55,12 +55,16 @@ const nothingCallbackBuilder = (response) => (b) => {
 };
 
 const redirectCallbackBuilder = (response) => (b) => {
-    b.user.state = {};
+    b.user.state = response;
     b.respond(response.template, "REDIRECT PLACEHOLDER");
 };
 
-const fallbackCallbackBuilder = (response) => (b) => {
+const optionsFallbackBuilder = (response) => (b) => {
     b.respond(`${response.invalid_option_text}\n\nDigite somente a *primeira parte* da opção desejada:\n${optionReplyBuilder(response)}`);
+};
+
+const redirectFallbackBuilder = (response) => (b) => {
+    b.respond(`Aguarde um pouco, em breve alguém vai te atender`);
 };
 
 const runBot = async () => {
@@ -83,16 +87,16 @@ const runBot = async () => {
     const rootResponse = responses.filter(r => r.parent_id === -1)[0];
     bot.global.custom(rootMatcherBuilder(rootResponse), optionsCallbackBuilder(rootResponse));
         
-    // options states
-    const optionsResponses = responses.filter(r => r.event === "options");
-    for (const response of optionsResponses) {
-        bot.global.custom(optionMatcherBuilder(response), optionsCallbackBuilder(response));
-    }
-        
     // nothing states
     const nothingResponses = responses.filter(r => r.event === "nothing");
     for (const response of nothingResponses) {
         bot.global.custom(optionMatcherBuilder(response), nothingCallbackBuilder(response));
+    }
+        
+    // options states
+    const optionsResponses = responses.filter(r => r.event === "options");
+    for (const response of optionsResponses) {
+        bot.global.custom(optionMatcherBuilder(response), optionsCallbackBuilder(response));
     }
         
     // redirect states
@@ -101,9 +105,14 @@ const runBot = async () => {
         bot.global.custom(optionMatcherBuilder(response), redirectCallbackBuilder(response));
     }
 
-    // fallbacks
+    // options fallbacks
     for (const response of optionsResponses) {
-        bot.global.custom(fallbackMatcherBuilder(response), fallbackCallbackBuilder(response));
+        bot.global.custom(fallbackMatcherBuilder(response), optionsFallbackBuilder(response));
+    }
+
+    // redirect fallbacks
+    for (const response of redirectResponses) {
+        bot.global.custom(fallbackMatcherBuilder(response), redirectFallbackBuilder(response));
     }
 
     bot.start(); // 🚀
