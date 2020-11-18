@@ -13,7 +13,11 @@ const notDirectMatcher = (message) => {
 
 const resetStateMatcher = (message) => message.text === process.env.ROCKETCHAT_USER;
 
-const rootMatcherBuilder = (response) => (message) => isEmpty(bot.memory.get(message.user.room.id));
+const rootMatcherBuilder = () => (message) => {
+    const currentState = bot.memory.get(message.user.room.id);
+    if (isEmpty) return true;
+    return isEmpty(currentState) || Date.now() - currentState.created_at > 60*60*1000;  
+};
 
 const optionMatcherBuilder = (response) => (message) => bot.memory.get(message.user.room.id).id === response.parent_id && iMatch(message.text, response.opt.trigger);
 

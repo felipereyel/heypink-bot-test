@@ -11,6 +11,7 @@ const {
     fallbackMatcherBuilder 
 } = require("./matchers");
 const { 
+    resetCallbackBuilder,
     optionsCallbackBuilder, 
     endCallbackBuilder,
     redirectCallbackBuilder, 
@@ -20,20 +21,6 @@ const {
 
 const runBot = async () => {
     const responses = await getConfigurations(process.env.BOT_ID);
-
-    // purge non direct messages
-    bot.global.custom(
-        notDirectMatcher, 
-        (b) => {}, 
-        { id: "purge_non_direct_messages" }
-    );
-
-    // reset state when added or removed
-    bot.global.custom(
-        resetStateMatcher, 
-        (b) => b.bot.memory.unset(b.message.user.room.id),
-        { id: "reset_when_enter_or_leave" }
-    );
 
     // debug
     bot.global.custom(
@@ -46,11 +33,25 @@ const runBot = async () => {
         (b) => b.bot.memory.unset(b.message.user.room.id) && b.respond("👍"), 
         { id: "debug_reset" }
     );
+
+    // purge non direct messages
+    bot.global.custom(
+        notDirectMatcher, 
+        (b) => {}, 
+        { id: "purge_non_direct_messages" }
+    );
+
+    // reset state when added or removed
+    bot.global.custom(
+        resetStateMatcher, 
+        resetCallbackBuilder(),
+        { id: "reset_when_enter_or_leave" }
+    );
     
     // root state
     const rootResponse = responses.filter(r => r.parent_id === -1)[0];
     bot.global.custom(
-        rootMatcherBuilder(rootResponse), 
+        rootMatcherBuilder(), 
         optionsCallbackBuilder(rootResponse), 
         { id: "root_message" }
     );
@@ -114,6 +115,5 @@ TODOS:
 - multiplas filas
 - image attachments
 
-- state timeout
 - max retrys?
 */

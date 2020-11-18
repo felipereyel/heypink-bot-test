@@ -1,9 +1,11 @@
 const bot = require('bbot');
 
+const resetCallbackBuilder = () => (b) =>  b.bot.memory.unset(b.message.user.room.id);
+
 const optionReplyBuilder = (response) => response.options.map(r => `*${r.opt.trigger}* - ${r.opt.description}`).join("\n");
 
 const optionsCallbackBuilder = (response) => (b) => {
-    b.bot.memory.set(b.message.user.room.id, response);
+    b.bot.memory.set(b.message.user.room.id, { id: response.id, created_at: Date.now() });
     b.respond(`${response.template}\n\nDigite somente a primeira parte da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
@@ -17,7 +19,7 @@ const redirectCallbackBuilder = (response) => (b) => {
     const hour = new Date().toLocaleTimeString('pt-BR', { hour: "numeric", minute: "numeric" });
 
     if (response.availability[dayOfWeek].start <= hour && hour <= response.availability[dayOfWeek].end) {
-        b.bot.memory.set(b.message.user.room.id, response);
+        b.bot.memory.set(b.message.user.room.id, { id: response.id, created_at: Date.now() });
         b.respond(response.template);
         bot.adapters.message.api.post('rooms.setCustomFields', {
             rid: b.user.room.id,
@@ -37,8 +39,9 @@ const redirectFallbackBuilder = (response) => (b) => {
     b.respond(`Aguarde um pouco, em breve alguém vai te atender`);
 };
 
-exports.endCallbackBuilder = endCallbackBuilder;
+exports.resetCallbackBuilder = resetCallbackBuilder;
 exports.optionsCallbackBuilder = optionsCallbackBuilder;
-exports.optionsFallbackBuilder = optionsFallbackBuilder;
+exports.endCallbackBuilder = endCallbackBuilder;
 exports.redirectCallbackBuilder = redirectCallbackBuilder;
+exports.optionsFallbackBuilder = optionsFallbackBuilder;
 exports.redirectFallbackBuilder = redirectFallbackBuilder;
