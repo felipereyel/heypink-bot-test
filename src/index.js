@@ -110,10 +110,10 @@ runBot();
 
 /*
 TODOS:
+- dept e pessoas
+- multiplas filas
+- image attachments
+
 - state timeout
 - max retrys?
-- after hours
-- image attachments
-- multiplas filas
-- dept e pessoas
 */

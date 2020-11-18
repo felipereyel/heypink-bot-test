@@ -13,12 +13,20 @@ const endCallbackBuilder = (response) => (b) => {
 };
 
 const redirectCallbackBuilder = (response) => (b) => {
-    b.bot.memory.set(b.message.user.room.id, response);
-    b.respond(response.template);
-    bot.adapters.message.api.post('rooms.setCustomFields', {
-        rid: b.user.room.id,
-        data: { departmentQueue: "GENERAL" }
-    });
+    const dayOfWeek = new Date().toLocaleTimeString('pt-BR', { weekday: 'short' }).replace("á", "a").slice(0, 3);
+    const hour = new Date().toLocaleTimeString('pt-BR', { hour: "numeric", minute: "numeric" });
+
+    if (response.availability[dayOfWeek].start <= hour && hour <= response.availability[dayOfWeek].end) {
+        b.bot.memory.set(b.message.user.room.id, response);
+        b.respond(response.template);
+        bot.adapters.message.api.post('rooms.setCustomFields', {
+            rid: b.user.room.id,
+            data: { departmentQueue: "GENERAL" }
+        });
+    } else {
+        b.bot.memory.unset(b.message.user.room.id);
+        b.respond(response.unavailable_text);
+    }
 };
 
 const optionsFallbackBuilder = (response) => (b) => {
