@@ -1,6 +1,10 @@
 version: '3'
 
 services:
+  git:
+    image: alpine/git:latest
+    container_name: GIT
+
   bot:
     container_name: PINK_BOT
     restart: always
