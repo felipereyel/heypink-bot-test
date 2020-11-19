@@ -3,31 +3,74 @@
 ## Example
 
 ```javascript
-[
-    {
-        "id": 72,
-        "created_at": "2020-10-22T19:51:10.080Z",
-        "updated_at": "2020-10-22T19:51:10.080Z",
-        "template": "Olá, o que posso fazer por você?",
+{
+    "answer_groups": false,
+    "initial_message": {
+        "id": 1,
         "event": "options",
-        "unavailable_text": null,
-        "redirect_to": null,
-        "availability": null,
-        "invalid_option_text": "Desculpa, não entendi",
+        "event_details": {
+            "invalid_option_text": "Tente novamente"
+        },
         "media_url": null,
-        "parent_id": -1,
-        "opt": {},
-        "options": [
+        "message": "Hello World",
+        "child_messages": [
             {
-                "id": 73,
-                "created_at": "2020-10-22T19:56:37.259Z",
-                "updated_at": "2020-10-22T19:56:37.259Z",
-                "template": "Estou te encaminhando para o setor de engenharia.\nEm breve alguém vai falar com você.",
-                "event": "redirect",
-                "unavailable_text": "No momento não temos ninguém para te atender. Volte em um horário comercial e tente novamente.",
+                "trigger": "xau",
+                "description": "Encerrar interacao"
+            },
+            {
+                "trigger": "eng",
+                "description": "Falar com o setor de engenharia"
+            },
+            {
+                "trigger": "piada",
+                "description": "Escutar uma piada"
+            }
+        ]
+    },
+    "messages": [
+        {
+            "id": 1,
+            "event": "options",
+            "event_details": {
+                "invalid_option_text": "Tente novamente"
+            },
+            "media_url": null,
+            "message": "Hello World",
+            "child_messages": [
+                {
+                    "trigger": "xau",
+                    "description": "Encerrar interacao"
+                },
+                {
+                    "trigger": "eng",
+                    "description": "Falar com o setor de engenharia"
+                },
+                {
+                    "trigger": "piada",
+                    "description": "Escutar uma piada"
+                }
+            ],
+            "trigger": null,
+            "parent_message_id": null
+        },
+        {
+            "id": 2,
+            "event": "end",
+            "event_details": {},
+            "media_url": null,
+            "message": "Ate logo 👋",
+            "child_messages": [],
+            "trigger": "xau",
+            "parent_message_id": 1
+        },
+        {
+            "id": 3,
+            "event": "redirect",
+            "event_details": {
                 "redirect_to": [
-                    "p1",
-                    "d1"
+                    "Jose",
+                    "Engenharia"
                 ],
                 "availability": {
                     "dom": {
@@ -55,312 +98,59 @@
                         "start": "09:09"
                     },
                     "ter": {
-                        "end": "21:09",
+                        "end": "23:30",
                         "start": "09:09"
                     }
                 },
-                "invalid_option_text": null,
-                "media_url": null,
-                "parent_id": 72,
-                "opt": {
-                    "id": 34,
-                    "created_at": "2020-10-22T19:56:37.25974",
-                    "updated_at": "2020-10-22T19:56:37.25974",
-                    "trigger": "eng",
-                    "parent_message_id": 72,
-                    "next_message_id": 73,
-                    "description": "Falar com a seção de engenharia"
-                },
-                "options": []
+                "unavailable_text": "No momento estamos sem ninguem para te anteder. Tente dentro do horario comercial"
             },
-            {
-                "id": 74,
-                "created_at": "2020-10-22T20:04:28.016Z",
-                "updated_at": "2020-10-22T20:04:28.016Z",
-                "template": "Até logo! Esperamos te ver em breve.",
-                "event": "nothing",
-                "unavailable_text": null,
-                "redirect_to": null,
-                "availability": null,
-                "invalid_option_text": null,
-                "media_url": null,
-                "parent_id": 72,
-                "opt": {
-                    "id": 35,
-                    "created_at": "2020-10-22T20:04:28.016676",
-                    "updated_at": "2020-10-22T20:04:28.016676",
-                    "trigger": "xau",
-                    "parent_message_id": 72,
-                    "next_message_id": 74,
-                    "description": "Encerrar a conversa"
-                },
-                "options": []
-            },
-            {
-                "id": 75,
-                "created_at": "2020-10-22T20:08:04.165Z",
-                "updated_at": "2020-10-22T20:08:04.165Z",
-                "template": "O que o pagodeiro foi fazer na igreja? Foi cantar pá god.",
-                "event": "options",
-                "unavailable_text": null,
-                "redirect_to": null,
-                "availability": null,
-                "invalid_option_text": "Não entendi.",
-                "media_url": null,
-                "parent_id": 72,
-                "opt": {
-                    "id": 36,
-                    "created_at": "2020-10-22T20:08:04.165617",
-                    "updated_at": "2020-10-22T20:08:04.165617",
-                    "trigger": "piada",
-                    "parent_message_id": 72,
-                    "next_message_id": 75,
-                    "description": "Ouvir uma piada"
-                },
-                "options": [
-                    {
-                        "id": 77,
-                        "created_at": "2020-10-22T20:12:13.950Z",
-                        "updated_at": "2020-10-22T20:12:13.950Z",
-                        "template": "Que pena. Depois pergunta denovo que eu te explico.",
-                        "event": "nothing",
-                        "unavailable_text": null,
-                        "redirect_to": null,
-                        "availability": null,
-                        "invalid_option_text": null,
-                        "media_url": null,
-                        "parent_id": 75,
-                        "opt": {
-                            "id": 38,
-                            "created_at": "2020-10-22T20:12:13.950829",
-                            "updated_at": "2020-10-22T20:12:13.950829",
-                            "trigger": "nao",
-                            "parent_message_id": 75,
-                            "next_message_id": 77,
-                            "description": "Não entendi a piada"
-                        },
-                        "options": []
-                    },
-                    {
-                        "id": 76,
-                        "created_at": "2020-10-22T20:10:57.359Z",
-                        "updated_at": "2020-10-22T20:10:57.359Z",
-                        "template": "Que bom! Depois chama denovo.",
-                        "event": "nothing",
-                        "unavailable_text": null,
-                        "redirect_to": null,
-                        "availability": null,
-                        "invalid_option_text": null,
-                        "media_url": null,
-                        "parent_id": 75,
-                        "opt": {
-                            "id": 37,
-                            "created_at": "2020-10-22T20:10:57.359652",
-                            "updated_at": "2020-10-22T20:10:57.359652",
-                            "trigger": "sim",
-                            "parent_message_id": 75,
-                            "next_message_id": 76,
-                            "description": "Entendi a piada e achei excelente"
-                        },
-                        "options": []
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": 73,
-        "created_at": "2020-10-22T19:56:37.259Z",
-        "updated_at": "2020-10-22T19:56:37.259Z",
-        "template": "Estou te encaminhando para o setor de engenharia.\nEm breve alguém vai falar com você.",
-        "event": "redirect",
-        "unavailable_text": "No momento não temos ninguém para te atender. Volte em um horário comercial e tente novamente.",
-        "redirect_to": [
-            "p1",
-            "d1"
-        ],
-        "availability": {
-            "dom": {
-                "end": "21:09",
-                "start": "09:09"
-            },
-            "qua": {
-                "end": "21:09",
-                "start": "09:09"
-            },
-            "qui": {
-                "end": "21:09",
-                "start": "09:09"
-            },
-            "sab": {
-                "end": "21:09",
-                "start": "09:09"
-            },
-            "seg": {
-                "end": "21:09",
-                "start": "09:09"
-            },
-            "sex": {
-                "end": "21:09",
-                "start": "09:09"
-            },
-            "ter": {
-                "end": "21:09",
-                "start": "09:09"
-            }
-        },
-        "invalid_option_text": null,
-        "media_url": null,
-        "parent_id": 72,
-        "opt": {
-            "id": 34,
-            "created_at": "2020-10-22T19:56:37.25974",
-            "updated_at": "2020-10-22T19:56:37.25974",
+            "media_url": null,
+            "message": "Estou te encaminhando, em breve alguem vem falar com voce",
+            "child_messages": [],
             "trigger": "eng",
-            "parent_message_id": 72,
-            "next_message_id": 73,
-            "description": "Falar com a seção de engenharia"
+            "parent_message_id": 1
         },
-        "options": []
-    },
-    {
-        "id": 74,
-        "created_at": "2020-10-22T20:04:28.016Z",
-        "updated_at": "2020-10-22T20:04:28.016Z",
-        "template": "Até logo! Esperamos te ver em breve.",
-        "event": "nothing",
-        "unavailable_text": null,
-        "redirect_to": null,
-        "availability": null,
-        "invalid_option_text": null,
-        "media_url": null,
-        "parent_id": 72,
-        "opt": {
-            "id": 35,
-            "created_at": "2020-10-22T20:04:28.016676",
-            "updated_at": "2020-10-22T20:04:28.016676",
-            "trigger": "xau",
-            "parent_message_id": 72,
-            "next_message_id": 74,
-            "description": "Encerrar a conversa"
-        },
-        "options": []
-    },
-    {
-        "id": 75,
-        "created_at": "2020-10-22T20:08:04.165Z",
-        "updated_at": "2020-10-22T20:08:04.165Z",
-        "template": "O que o pagodeiro foi fazer na igreja? Foi cantar pá god.",
-        "event": "options",
-        "unavailable_text": null,
-        "redirect_to": null,
-        "availability": null,
-        "invalid_option_text": "Não entendi.",
-        "media_url": null,
-        "parent_id": 72,
-        "opt": {
-            "id": 36,
-            "created_at": "2020-10-22T20:08:04.165617",
-            "updated_at": "2020-10-22T20:08:04.165617",
-            "trigger": "piada",
-            "parent_message_id": 72,
-            "next_message_id": 75,
-            "description": "Ouvir uma piada"
-        },
-        "options": [
-            {
-                "id": 77,
-                "created_at": "2020-10-22T20:12:13.950Z",
-                "updated_at": "2020-10-22T20:12:13.950Z",
-                "template": "Que pena. Depois pergunta denovo que eu te explico.",
-                "event": "nothing",
-                "unavailable_text": null,
-                "redirect_to": null,
-                "availability": null,
-                "invalid_option_text": null,
-                "media_url": null,
-                "parent_id": 75,
-                "opt": {
-                    "id": 38,
-                    "created_at": "2020-10-22T20:12:13.950829",
-                    "updated_at": "2020-10-22T20:12:13.950829",
-                    "trigger": "nao",
-                    "parent_message_id": 75,
-                    "next_message_id": 77,
-                    "description": "Não entendi a piada"
-                },
-                "options": []
+        {
+            "id": 5,
+            "event": "options",
+            "event_details": {
+                "invalid_option_text": "Desculpa nao entendi"
             },
-            {
-                "id": 76,
-                "created_at": "2020-10-22T20:10:57.359Z",
-                "updated_at": "2020-10-22T20:10:57.359Z",
-                "template": "Que bom! Depois chama denovo.",
-                "event": "nothing",
-                "unavailable_text": null,
-                "redirect_to": null,
-                "availability": null,
-                "invalid_option_text": null,
-                "media_url": null,
-                "parent_id": 75,
-                "opt": {
-                    "id": 37,
-                    "created_at": "2020-10-22T20:10:57.359652",
-                    "updated_at": "2020-10-22T20:10:57.359652",
+            "media_url": null,
+            "message": "O que o pagodeiro foi fazer na igreja? Foi cantar pá god. Entendeu?",
+            "child_messages": [
+                {
                     "trigger": "sim",
-                    "parent_message_id": 75,
-                    "next_message_id": 76,
-                    "description": "Entendi a piada e achei excelente"
+                    "description": "Saquei, piada genial"
                 },
-                "options": []
-            }
-        ]
-    },
-    {
-        "id": 77,
-        "created_at": "2020-10-22T20:12:13.950Z",
-        "updated_at": "2020-10-22T20:12:13.950Z",
-        "template": "Que pena. Depois pergunta denovo que eu te explico.",
-        "event": "nothing",
-        "unavailable_text": null,
-        "redirect_to": null,
-        "availability": null,
-        "invalid_option_text": null,
-        "media_url": null,
-        "parent_id": 75,
-        "opt": {
-            "id": 38,
-            "created_at": "2020-10-22T20:12:13.950829",
-            "updated_at": "2020-10-22T20:12:13.950829",
-            "trigger": "nao",
-            "parent_message_id": 75,
-            "next_message_id": 77,
-            "description": "Não entendi a piada"
+                {
+                    "trigger": "nao",
+                    "description": "Nao entendi."
+                }
+            ],
+            "trigger": "piada",
+            "parent_message_id": 1
         },
-        "options": []
-    },
-    {
-        "id": 76,
-        "created_at": "2020-10-22T20:10:57.359Z",
-        "updated_at": "2020-10-22T20:10:57.359Z",
-        "template": "Que bom! Depois chama denovo.",
-        "event": "nothing",
-        "unavailable_text": null,
-        "redirect_to": null,
-        "availability": null,
-        "invalid_option_text": null,
-        "media_url": null,
-        "parent_id": 75,
-        "opt": {
-            "id": 37,
-            "created_at": "2020-10-22T20:10:57.359652",
-            "updated_at": "2020-10-22T20:10:57.359652",
+        {
+            "id": 6,
+            "event": "end",
+            "event_details": {},
+            "media_url": null,
+            "message": "Valeu. Depois chama denovo.",
+            "child_messages": [],
             "trigger": "sim",
-            "parent_message_id": 75,
-            "next_message_id": 76,
-            "description": "Entendi a piada e achei excelente"
+            "parent_message_id": 5
         },
-        "options": []
-    }
-]
+        {
+            "id": 7,
+            "event": "end",
+            "event_details": {},
+            "media_url": null,
+            "message": "Que pena. Tenta mais tarde denovo que acho que voce entende.",
+            "child_messages": [],
+            "trigger": "nao",
+            "parent_message_id": 5
+        }
+    ]
+}
 ```

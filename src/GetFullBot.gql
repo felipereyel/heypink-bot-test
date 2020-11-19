@@ -1,0 +1,29 @@
+query GetFullBot($id: bigint!) {
+  bots_by_pk(id: $id) {
+    answer_groups
+    initial_message {
+      id
+      event
+      event_details
+      media_url
+      message
+      child_messages {
+        trigger
+        description
+      }
+    }
+    messages {
+      id
+      event
+      event_details
+      media_url
+      message
+      child_messages {
+        trigger
+        description
+      }
+      trigger
+      parent_message_id
+    }
+  }
+}

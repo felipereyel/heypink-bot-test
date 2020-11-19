@@ -20,7 +20,7 @@ const {
 } = require("./callbacks");
 
 const runBot = async () => {
-    const responses = await getConfigurations(process.env.BOT_ID);
+    const config = await getConfigurations(process.env.BOT_ID);
 
     // debug
     bot.global.custom(
@@ -49,40 +49,39 @@ const runBot = async () => {
     );
     
     // root state
-    const rootResponse = responses.filter(r => r.parent_id === -1)[0];
     bot.global.custom(
         rootMatcherBuilder(), 
-        optionsCallbackBuilder(rootResponse), 
+        optionsCallbackBuilder(config.initial_message), 
         { id: "root_message" }
     );
         
     // end states
-    const endResponses = responses.filter(r => r.event === "nothing");
+    const endResponses = config.messages.filter(m => !m.event || m.event === "end");
     for (const response of endResponses) {
         bot.global.custom(
             optionMatcherBuilder(response), 
             endCallbackBuilder(response), 
-            { id: `${response.opt.trigger}_trigger_message` }
+            { id: `${response.trigger}_trigger_message` }
         );
     }
         
     // options states
-    const optionsResponses = responses.filter(r => r.event === "options");
+    const optionsResponses = config.messages.filter(r => r.event === "options");
     for (const response of optionsResponses) {
         bot.global.custom(
             optionMatcherBuilder(response), 
             optionsCallbackBuilder(response), 
-            { id: `${response.opt.trigger}_trigger_message` }
+            { id: `${response.trigger}_trigger_message` }
         );
     }
         
     // redirect states
-    const redirectResponses = responses.filter(r => r.event === "redirect");
+    const redirectResponses = config.messages.filter(r => r.event === "redirect");
     for (const response of redirectResponses) {
         bot.global.custom(
             optionMatcherBuilder(response), 
             redirectCallbackBuilder(response), 
-            { id: `${response.opt.trigger}_trigger_message` }
+            { id: `${response.trigger}_trigger_message` }
         );
     }
 
@@ -91,7 +90,7 @@ const runBot = async () => {
         bot.global.custom(
             fallbackMatcherBuilder(response), 
             optionsFallbackBuilder(response), 
-            { id: `${response.opt.trigger}_fallback_message` }
+            { id: `${response.trigger}_fallback_message` }
         );
     }
 
@@ -100,7 +99,7 @@ const runBot = async () => {
         bot.global.custom(
             fallbackMatcherBuilder(response), 
             redirectFallbackBuilder(response), 
-            { id: `${response.opt.trigger}_fallback_message` }
+            { id: `${response.trigger}_fallback_message` }
         );
     }
 
@@ -108,6 +107,7 @@ const runBot = async () => {
 }
 
 runBot();
+// getConfigurations(process.env.BOT_ID).then(res => console.log(JSON.stringify(res, null, 4))).catch(err => console.log(err));
 
 /*
 TODOS:

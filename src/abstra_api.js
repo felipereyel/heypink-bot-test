@@ -1,26 +1,22 @@
 require("dotenv").config();
 const fetch = require('node-fetch');
+const fs = require("fs");
+
+
+const GetFullBot = fs
+	.readFileSync("./src/GetFullBot.gql")
+	.toString();
 
 const getConfigurations = async (botId) => {
-    const body = {
-        query: "mutation Something($statementId: ID!, $args: [Arg]) { execute_statement(statement_id: $statementId, args: $args){ rows } }",
-        variables: { statementId: process.env.CONFIGURATION_QUERY_ID, args: [botId] }
-    }
-
-    const response = await fetch(process.env.TABLES_URL, {
+    const body = { query: GetFullBot, variables: { id: botId } };
+    const response = await fetch(process.env.HASURA_URL, {
         method: "POST",
         body: JSON.stringify(body),
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-hasura-admin-secret': process.env.HASURA_SECRET },
     });
 
     const result = await response.json();
-    const responses = result.data.execute_statement.rows;
-
-    for (const response of responses) {
-        response.options = responses.filter(r => r.parent_id === response.id);
-    }
-
-    return responses;
+    return result.data.bots_by_pk;
 }
 
 exports.getConfigurations = getConfigurations;
