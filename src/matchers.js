@@ -4,9 +4,9 @@ const { triv_msg_regex, iMatch } = require("./utils");
 
 const notDirectMatcher = (message) => {
     const isRCDM = message.user.room.type === "d";
-    const isWAPrivate = message.user.room.name?.match(triv_msg_regex);
-    const isRCMention = message.text?.includes(`${process.env.ROCKETCHAT_USER}`);
-    const isWAMention = message.text?.includes(`@${process.env.WHATSAPP_NUMBER}`);
+    const isWAPrivate = message.user.room.name ? message.user.room.name.match(triv_msg_regex) : false;
+    const isRCMention = message.text ? message.text.includes(`${process.env.ROCKETCHAT_USER}`) : false;
+    const isWAMention = message.text ? message.text.includes(`@${process.env.WHATSAPP_NUMBER}`) : false;
     const isManageMessage = message.event === "enter" || message.event === "leave";
     return (!isRCDM && !isWAPrivate && !isRCMention && !isWAMention) || isManageMessage;
 };
