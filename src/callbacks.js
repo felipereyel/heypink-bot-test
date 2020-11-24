@@ -23,7 +23,7 @@ const redirectCallbackBuilder = (response) => (b) => {
         b.respond(response.message);
         bot.adapters.message.api.post('rooms.setCustomFields', {
             rid: b.user.room.id,
-            data: { departmentQueue: "GENERAL" }
+            data: { departmentQueue: response.event_details.redirect_to }
         });
     } else {
         b.bot.memory.unset(b.message.user.room.id);
