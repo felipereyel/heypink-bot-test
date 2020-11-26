@@ -8,6 +8,7 @@
     "dotenv": "^8.2.0",
     "fs": "0.0.1-security",
     "lodash": "^4.17.20",
+    "moment-timezone": "^0.5.32",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {},

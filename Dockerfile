@@ -4,6 +4,7 @@ WORKDIR /node-app
 
 COPY package.json .
 
+RUN apk --no-cache add git
 RUN npm install --quiet
 
 COPY . . 
