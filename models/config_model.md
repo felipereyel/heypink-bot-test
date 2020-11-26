@@ -6,150 +6,126 @@
 {
     "answer_groups": false,
     "initial_message": {
-        "id": 1,
+        "id": 93,
         "event": "options",
         "event_details": {
-            "invalid_option_text": "Tente novamente"
+            "invalid_option_text": "Desculpe não entendi."
         },
         "media_url": null,
-        "message": "Hello World",
+        "message": "Ola, como posso te ajudar?",
         "child_messages": [
             {
-                "trigger": "xau",
-                "description": "Encerrar interacao"
+                "trigger": "fin",
+                "description": "Falar com o departamento financeiro"
             },
             {
                 "trigger": "eng",
-                "description": "Falar com o setor de engenharia"
+                "description": "Falar com o departamento de engenharia"
             },
             {
-                "trigger": "piada",
-                "description": "Escutar uma piada"
+                "trigger": "comercial",
+                "description": "Falar com o departamento comercial"
             }
         ]
     },
     "messages": [
         {
-            "id": 1,
+            "id": 93,
             "event": "options",
             "event_details": {
-                "invalid_option_text": "Tente novamente"
+                "invalid_option_text": "Desculpe não entendi."
             },
             "media_url": null,
-            "message": "Hello World",
+            "message": "Ola, como posso te ajudar?",
             "child_messages": [
                 {
-                    "trigger": "xau",
-                    "description": "Encerrar interacao"
+                    "trigger": "fin",
+                    "description": "Falar com o departamento financeiro"
                 },
                 {
                     "trigger": "eng",
-                    "description": "Falar com o setor de engenharia"
+                    "description": "Falar com o departamento de engenharia"
                 },
                 {
-                    "trigger": "piada",
-                    "description": "Escutar uma piada"
+                    "trigger": "comercial",
+                    "description": "Falar com o departamento comercial"
                 }
             ],
-            "trigger": null,
+            "trigger": "",
             "parent_message_id": null
         },
         {
-            "id": 2,
-            "event": "end",
-            "event_details": {},
-            "media_url": null,
-            "message": "Ate logo 👋",
-            "child_messages": [],
-            "trigger": "xau",
-            "parent_message_id": 1
-        },
-        {
-            "id": 3,
+            "id": 94,
             "event": "redirect",
             "event_details": {
-                "redirect_to": [
-                    "Jose",
-                    "Engenharia"
-                ],
-                "availability": {
-                    "dom": {
-                        "end": "21:09",
-                        "start": "09:09"
-                    },
-                    "qua": {
-                        "end": "21:09",
-                        "start": "09:09"
-                    },
-                    "qui": {
-                        "end": "21:09",
-                        "start": "09:09"
-                    },
-                    "sab": {
-                        "end": "21:09",
-                        "start": "09:09"
-                    },
-                    "seg": {
-                        "end": "21:09",
-                        "start": "09:09"
-                    },
-                    "sex": {
-                        "end": "21:09",
-                        "start": "09:09"
-                    },
-                    "ter": {
-                        "end": "23:30",
-                        "start": "09:09"
-                    }
-                },
-                "unavailable_text": "No momento estamos sem ninguem para te anteder. Tente dentro do horario comercial"
+                "redirect_to": "FINANCEIRO",
+                "availability": "09:00/17:00",
+                "unavailable_text": "No momento não temos ninguém para te anteder. Tente novamente dentro do horário comercial."
             },
             "media_url": null,
-            "message": "Estou te encaminhando, em breve alguem vem falar com voce",
+            "message": "Vou te encaminhar para o setor financeiro, em breve alguém vai te atender.",
+            "child_messages": [],
+            "trigger": "fin",
+            "parent_message_id": 93
+        },
+        {
+            "id": 95,
+            "event": "end",
+            "event_details": {},
+            "media_url": null,
+            "message": "O departamento de engenharia atende por um numero especial agora. Entre em contato via (21) 98765-4321.",
             "child_messages": [],
             "trigger": "eng",
-            "parent_message_id": 1
+            "parent_message_id": 93
         },
         {
-            "id": 5,
+            "id": 96,
             "event": "options",
             "event_details": {
-                "invalid_option_text": "Desculpa nao entendi"
+                "invalid_option_text": "Tente novamente."
             },
             "media_url": null,
-            "message": "O que o pagodeiro foi fazer na igreja? Foi cantar pá god. Entendeu?",
+            "message": "Sobre o que deseja falar?",
             "child_messages": [
                 {
-                    "trigger": "sim",
-                    "description": "Saquei, piada genial"
+                    "trigger": "vendas",
+                    "description": "Fazer uma venda"
                 },
                 {
-                    "trigger": "nao",
-                    "description": "Nao entendi."
+                    "trigger": "compras",
+                    "description": "Fazer uma compra"
                 }
             ],
-            "trigger": "piada",
-            "parent_message_id": 1
+            "trigger": "comercial",
+            "parent_message_id": 93
         },
         {
-            "id": 6,
-            "event": "end",
-            "event_details": {},
+            "id": 97,
+            "event": "redirect",
+            "event_details": {
+                "redirect_to": "COMERCIAL/VENDAS",
+                "availability": "09:00/17:00, sex@09:00/15:00",
+                "unavailable_text": "Nesse momento não há ninguém para te atender. Tente voltar dentro do horário comercial."
+            },
             "media_url": null,
-            "message": "Valeu. Depois chama denovo.",
+            "message": "Estou te encaminhando para o setor de vendas, logo logo um de nossos atendentes vai falar com você.",
             "child_messages": [],
-            "trigger": "sim",
-            "parent_message_id": 5
+            "trigger": "vendas",
+            "parent_message_id": 96
         },
         {
-            "id": 7,
-            "event": "end",
-            "event_details": {},
+            "id": 98,
+            "event": "redirect",
+            "event_details": {
+                "redirect_to": "COMERCIAL/COMPRAS",
+                "availability": "09:00/17:00, qui@09:00/15:00, sex@09:00/15:00",
+                "unavailable_text": "Nesse momento não há ninguém para te atender. Tente voltar dentro do horário comercial."
+            },
             "media_url": null,
-            "message": "Que pena. Tenta mais tarde denovo que acho que voce entende.",
+            "message": "Vou te encaminhar para o setor de compras, em breve um atendente vem te atender.",
             "child_messages": [],
-            "trigger": "nao",
-            "parent_message_id": 5
+            "trigger": "compras",
+            "parent_message_id": 96
         }
     ]
 }

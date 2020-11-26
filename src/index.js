@@ -112,8 +112,7 @@ runBot();
 /*
 TODOS:
 - dept e pessoas
-- multiplas filas
-- image attachments
 
+- image attachments
 - max retrys?
 */

@@ -1,4 +1,5 @@
 const bot = require('bbot');
+const { availabilityChecker } = require("./utils");
 
 const resetCallbackBuilder = () => (b) =>  b.bot.memory.unset(b.message.user.room.id);
 
@@ -15,10 +16,7 @@ const endCallbackBuilder = (response) => (b) => {
 };
 
 const redirectCallbackBuilder = (response) => (b) => {
-    const dayOfWeek = new Date().toLocaleTimeString('pt-BR', { weekday: 'short' }).replace("á", "a").slice(0, 3);
-    const hour = new Date().toLocaleTimeString('pt-BR', { hour: "numeric", minute: "numeric" });
-
-    if (response.event_details.availability[dayOfWeek].start <= hour && hour <= response.event_details.availability[dayOfWeek].end) {
+    if (availabilityChecker(response.event_details.availability)) {
         b.bot.memory.set(b.message.user.room.id, { id: response.id, created_at: Date.now() });
         b.respond(response.message);
         bot.adapters.message.api.post('rooms.setCustomFields', {
