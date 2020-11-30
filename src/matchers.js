@@ -13,7 +13,7 @@ const notDirectMatcher = (message) => {
 
 const resetStateMatcher = (message) => message.text === process.env.ROCKETCHAT_USER;
 
-const rootMatcherBuilder = () => (message) => {
+const rootMatcher = (message) => {
     const currentState = bot.memory.get(message.user.room.id);
     return isEmpty(currentState) || Date.now() - currentState.created_at > 60*60*1000;  
 };
@@ -25,6 +25,7 @@ const fallbackMatcherBuilder = (response) => (message) => bot.memory.get(message
 // order matters
 exports.notDirectMatcher = notDirectMatcher;
 exports.resetStateMatcher = resetStateMatcher;
-exports.rootMatcherBuilder = rootMatcherBuilder;
+exports.rootMatcher = rootMatcher;
+
 exports.optionMatcherBuilder = optionMatcherBuilder;
 exports.fallbackMatcherBuilder = fallbackMatcherBuilder;

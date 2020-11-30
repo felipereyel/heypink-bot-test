@@ -6,7 +6,7 @@ const { iMatch } = require("./utils");
 const { 
     notDirectMatcher, 
     resetStateMatcher, 
-    rootMatcherBuilder, 
+    rootMatcher, 
     optionMatcherBuilder, 
     fallbackMatcherBuilder 
 } = require("./matchers");
@@ -30,7 +30,14 @@ const runBot = async () => {
     );
     bot.global.custom(
         (message) => iMatch(message.text, "reset"), 
-        (b) => b.bot.memory.unset(b.message.user.room.id) && b.respond("👍"), 
+        (b) => {
+            b.bot.memory.unset(b.message.user.room.id);
+            bot.adapters.message.api.post('rooms.setCustomFields', {
+                rid: b.user.room.id,
+                data: { departmentQueue: null }
+            });
+            b.respond("✅");
+        }, 
         { id: "debug_reset" }
     );
 
@@ -50,7 +57,7 @@ const runBot = async () => {
     
     // root state
     bot.global.custom(
-        rootMatcherBuilder(), 
+        rootMatcher, 
         optionsCallbackBuilder(config.initial_message), 
         { id: "root_message" }
     );
