@@ -68,7 +68,7 @@ const runBot = async () => {
         bot.global.custom(
             optionMatcherBuilder(response), 
             endCallbackBuilder(response), 
-            { id: `${response.trigger}_trigger_message` }
+            { id: `${response.id}_trigger_end_message` }
         );
     }
         
@@ -78,7 +78,17 @@ const runBot = async () => {
         bot.global.custom(
             optionMatcherBuilder(response), 
             optionsCallbackBuilder(response), 
-            { id: `${response.trigger}_trigger_message` }
+            { id: `${response.id}_trigger_options_message` }
+        );
+    }
+        
+    // goback states
+    const gobackResponses = config.messages.filter(r => r.event === "goback");
+    for (const response of gobackResponses) {
+        bot.global.custom(
+            optionMatcherBuilder(response), 
+            optionsCallbackBuilder(response.parent_message), 
+            { id: `${response.id}_trigger_goback_message` }
         );
     }
         
@@ -88,7 +98,7 @@ const runBot = async () => {
         bot.global.custom(
             optionMatcherBuilder(response), 
             redirectCallbackBuilder(response), 
-            { id: `${response.trigger}_trigger_message` }
+            { id: `${response.id}_trigger_redirect_message` }
         );
     }
 
@@ -97,7 +107,7 @@ const runBot = async () => {
         bot.global.custom(
             fallbackMatcherBuilder(response), 
             optionsFallbackBuilder(response), 
-            { id: `${response.trigger}_fallback_message` }
+            { id: `${response.id}_options_fallback_message` }
         );
     }
 
@@ -106,7 +116,7 @@ const runBot = async () => {
         bot.global.custom(
             fallbackMatcherBuilder(response), 
             redirectFallbackBuilder(response), 
-            { id: `${response.trigger}_fallback_message` }
+            { id: `${response.id}_redirect_fallback_message` }
         );
     }
 
@@ -119,7 +129,6 @@ runBot();
 /*
 TODOS:
 - dept e pessoas
-
 - image attachments
 - max retrys?
 */

@@ -24,6 +24,14 @@ query GetFullBot($id: bigint!) {
       }
       trigger
       parent_message_id
+      parent_message {
+        id
+        message
+        child_messages {
+          trigger
+          description
+        }
+      }
     }
   }
 }

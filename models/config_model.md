@@ -6,126 +6,206 @@
 {
     "answer_groups": false,
     "initial_message": {
-        "id": 93,
+        "id": 7,
         "event": "options",
         "event_details": {
             "invalid_option_text": "Desculpe não entendi."
         },
         "media_url": null,
-        "message": "Ola, como posso te ajudar?",
+        "message": "Hey, bem-vindo a Pink 🙂",
         "child_messages": [
             {
-                "trigger": "fin",
-                "description": "Falar com o departamento financeiro"
+                "trigger": "1",
+                "description": "Comercial"
             },
             {
-                "trigger": "eng",
-                "description": "Falar com o departamento de engenharia"
+                "trigger": "2",
+                "description": "Suporte"
             },
             {
-                "trigger": "comercial",
-                "description": "Falar com o departamento comercial"
+                "trigger": "3",
+                "description": "Financeiro"
+            },
+            {
+                "trigger": "4",
+                "description": "Outros"
             }
         ]
     },
     "messages": [
         {
-            "id": 93,
+            "id": 7,
             "event": "options",
             "event_details": {
                 "invalid_option_text": "Desculpe não entendi."
             },
             "media_url": null,
-            "message": "Ola, como posso te ajudar?",
+            "message": "Hey, bem-vindo a Pink 🙂",
             "child_messages": [
                 {
-                    "trigger": "fin",
-                    "description": "Falar com o departamento financeiro"
+                    "trigger": "1",
+                    "description": "Comercial"
                 },
                 {
-                    "trigger": "eng",
-                    "description": "Falar com o departamento de engenharia"
+                    "trigger": "2",
+                    "description": "Suporte"
                 },
                 {
-                    "trigger": "comercial",
-                    "description": "Falar com o departamento comercial"
+                    "trigger": "3",
+                    "description": "Financeiro"
+                },
+                {
+                    "trigger": "4",
+                    "description": "Outros"
                 }
             ],
             "trigger": "",
-            "parent_message_id": null
+            "parent_message_id": null,
+            "parent_message": null
         },
         {
-            "id": 94,
+            "id": 8,
+            "event": "redirect",
+            "event_details": {
+                "redirect_to": "COMERCIAL",
+                "availability": "08:00/20:00",
+                "unavailable_text": "Nesse momento não há ninguém para te atender. Tente voltar dentro do horário de atendimento, 08h às 20h (Dias úteis)."
+            },
+            "media_url": null,
+            "message": "Legal! Um Pinker já vai falar com você :)\n\nLembrando que nosso horário de atendimento é de 08h às 20h (Dias úteis).",
+            "child_messages": [],
+            "trigger": "1",
+            "parent_message_id": 7,
+            "parent_message": {
+                "id": 7,
+                "message": "Hey, bem-vindo a Pink 🙂",
+                "child_messages": [
+                    {
+                        "trigger": "1",
+                        "description": "Comercial"
+                    },
+                    {
+                        "trigger": "2",
+                        "description": "Suporte"
+                    },
+                    {
+                        "trigger": "3",
+                        "description": "Financeiro"
+                    },
+                    {
+                        "trigger": "4",
+                        "description": "Outros"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 9,
+            "event": "redirect",
+            "event_details": {
+                "redirect_to": "SUPORTE",
+                "availability": "08:00/20:00",
+                "unavailable_text": "Nesse momento não há ninguém para te atender. Tente voltar dentro do horário de atendimento, 08h às 20h (Dias úteis)."
+            },
+            "media_url": null,
+            "message": "Diga o seu nome, empresa e como podemos te ajudar para agilizar seu o atendimento. 😉",
+            "child_messages": [],
+            "trigger": "2",
+            "parent_message_id": 7,
+            "parent_message": {
+                "id": 7,
+                "message": "Hey, bem-vindo a Pink 🙂",
+                "child_messages": [
+                    {
+                        "trigger": "1",
+                        "description": "Comercial"
+                    },
+                    {
+                        "trigger": "2",
+                        "description": "Suporte"
+                    },
+                    {
+                        "trigger": "3",
+                        "description": "Financeiro"
+                    },
+                    {
+                        "trigger": "4",
+                        "description": "Outros"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 10,
             "event": "redirect",
             "event_details": {
                 "redirect_to": "FINANCEIRO",
-                "availability": "09:00/17:00",
-                "unavailable_text": "No momento não temos ninguém para te anteder. Tente novamente dentro do horário comercial."
+                "availability": "08:00/20:00",
+                "unavailable_text": "Nesse momento não há ninguém para te atender. Tente voltar dentro do horário de atendimento, 08h às 20h (Dias úteis)."
             },
             "media_url": null,
-            "message": "Vou te encaminhar para o setor financeiro, em breve alguém vai te atender.",
+            "message": "Diga o seu nome, empresa e como podemos te ajudar para agilizar seu o atendimento. 😉",
             "child_messages": [],
-            "trigger": "fin",
-            "parent_message_id": 93
+            "trigger": "3",
+            "parent_message_id": 7,
+            "parent_message": {
+                "id": 7,
+                "message": "Hey, bem-vindo a Pink 🙂",
+                "child_messages": [
+                    {
+                        "trigger": "1",
+                        "description": "Comercial"
+                    },
+                    {
+                        "trigger": "2",
+                        "description": "Suporte"
+                    },
+                    {
+                        "trigger": "3",
+                        "description": "Financeiro"
+                    },
+                    {
+                        "trigger": "4",
+                        "description": "Outros"
+                    }
+                ]
+            }
         },
         {
-            "id": 95,
-            "event": "end",
-            "event_details": {},
-            "media_url": null,
-            "message": "O departamento de engenharia atende por um numero especial agora. Entre em contato via (21) 98765-4321.",
-            "child_messages": [],
-            "trigger": "eng",
-            "parent_message_id": 93
-        },
-        {
-            "id": 96,
-            "event": "options",
-            "event_details": {
-                "invalid_option_text": "Tente novamente."
-            },
-            "media_url": null,
-            "message": "Sobre o que deseja falar?",
-            "child_messages": [
-                {
-                    "trigger": "vendas",
-                    "description": "Fazer uma venda"
-                },
-                {
-                    "trigger": "compras",
-                    "description": "Fazer uma compra"
-                }
-            ],
-            "trigger": "comercial",
-            "parent_message_id": 93
-        },
-        {
-            "id": 97,
+            "id": 11,
             "event": "redirect",
             "event_details": {
-                "redirect_to": "COMERCIAL/VENDAS",
-                "availability": "09:00/17:00, sex@09:00/15:00",
-                "unavailable_text": "Nesse momento não há ninguém para te atender. Tente voltar dentro do horário comercial."
+                "redirect_to": "GENERAL",
+                "availability": "08:00/20:00",
+                "unavailable_text": "Nesse momento não há ninguém para te atender. Tente voltar dentro do horário de atendimento, 08h às 20h (Dias úteis)."
             },
             "media_url": null,
-            "message": "Estou te encaminhando para o setor de vendas, logo logo um de nossos atendentes vai falar com você.",
+            "message": "Legal! Um Pinker já vai falar com você :)\n\nLembrando que nosso horário de atendimento é de 08h às 20h (Dias úteis).",
             "child_messages": [],
-            "trigger": "vendas",
-            "parent_message_id": 96
-        },
-        {
-            "id": 98,
-            "event": "redirect",
-            "event_details": {
-                "redirect_to": "COMERCIAL/COMPRAS",
-                "availability": "09:00/17:00, qui@09:00/15:00, sex@09:00/15:00",
-                "unavailable_text": "Nesse momento não há ninguém para te atender. Tente voltar dentro do horário comercial."
-            },
-            "media_url": null,
-            "message": "Vou te encaminhar para o setor de compras, em breve um atendente vem te atender.",
-            "child_messages": [],
-            "trigger": "compras",
-            "parent_message_id": 96
+            "trigger": "4",
+            "parent_message_id": 7,
+            "parent_message": {
+                "id": 7,
+                "message": "Hey, bem-vindo a Pink 🙂",
+                "child_messages": [
+                    {
+                        "trigger": "1",
+                        "description": "Comercial"
+                    },
+                    {
+                        "trigger": "2",
+                        "description": "Suporte"
+                    },
+                    {
+                        "trigger": "3",
+                        "description": "Financeiro"
+                    },
+                    {
+                        "trigger": "4",
+                        "description": "Outros"
+                    }
+                ]
+            }
         }
     ]
 }
