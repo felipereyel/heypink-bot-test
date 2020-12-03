@@ -13,7 +13,7 @@ const availabilityChecker = (weeklyvailability) => {
 
     const [ defaultHours, ...rest ] = weeklyvailability.split(",").map(h => h.trim());
     const specificHours = rest.filter(h => h.includes(dayOfWeek)).map(h => h.replace(dayOfWeek, "").replace("@", "").trim())[0];
-    const [start, end] = (specificHours ? specificHours : defaultHours).split("/");
+    const [start, end] = (specificHours || defaultHours).split("/");
 
     return start <= hour && hour <= end;
 };
