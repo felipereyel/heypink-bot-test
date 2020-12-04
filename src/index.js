@@ -85,9 +85,12 @@ const runBot = async () => {
     // goback states
     const gobackResponses = config.messages.filter(r => r.event === "goback");
     for (const response of gobackResponses) {
+        const grandParentResponse = config.messages.filter(r => r.id === response.parent_message.parent_message_id)[0];
+        if (!grandParentResponse) continue;
+        console.log()
         bot.global.custom(
             optionMatcherBuilder(response), 
-            optionsCallbackBuilder(response.parent_message), 
+            optionsCallbackBuilder(grandParentResponse), 
             { id: `${response.id}_trigger_goback_message` }
         );
     }
@@ -123,8 +126,8 @@ const runBot = async () => {
     bot.start(); // 🚀
 }
 
-runBot();
-// getConfigurations(process.env.BOT_ID).then(res => console.log(JSON.stringify(res, null, 4))).catch(err => console.log(err));
+// runBot();
+getConfigurations(process.env.BOT_ID).then(res => console.log(JSON.stringify(res, null, 4))).catch(err => console.log(err));
 
 /*
 TODOS:
