@@ -126,8 +126,8 @@ const runBot = async () => {
     bot.start(); // 🚀
 }
 
-// runBot();
-getConfigurations(process.env.BOT_ID).then(res => console.log(JSON.stringify(res, null, 4))).catch(err => console.log(err));
+runBot();
+// getConfigurations(process.env.BOT_ID).then(res => console.log(JSON.stringify(res, null, 4))).catch(err => console.log(err));
 
 /*
 TODOS:
