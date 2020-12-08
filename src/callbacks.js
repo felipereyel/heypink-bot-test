@@ -7,34 +7,34 @@ const optionReplyBuilder = (response) => response.child_messages.map(r => `*${r.
 
 const optionsCallbackBuilder = (response) => (b) => {
     b.bot.memory.set(b.message.user.room.id, { id: response.id, created_at: Date.now() });
-    console.log(`${response.message}\n\nDigite somente a primeira parte da opção desejada:\n${optionReplyBuilder(response)}`);
+    b.respond(`${response.message}\n\nDigite somente a primeira parte da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
 const endCallbackBuilder = (response) => (b) => {
     b.bot.memory.unset(b.message.user.room.id);
-    console.log(response.message);
+    b.respond(response.message);
 };
 
 const redirectCallbackBuilder = (response) => (b) => {
     if (availabilityChecker(response.event_details.availability)) {
         b.bot.memory.set(b.message.user.room.id, { id: response.id, created_at: Date.now() });
-        console.log(response.message);
-        // bot.adapters.message.api.post('rooms.setCustomFields', {
-        //     rid: b.user.room.id,
-        //     data: { departmentQueue: response.event_details.redirect_to }
-        // });
+        b.respond(response.message);
+        bot.adapters.message.api.post('rooms.setCustomFields', {
+            rid: b.user.room.id,
+            data: { departmentQueue: response.event_details.redirect_to }
+        });
     } else {
         b.bot.memory.unset(b.message.user.room.id);
-        console.log(response.event_details.unavailable_text);
+        b.respond(response.event_details.unavailable_text);
     }
 };
 
 const optionsFallbackBuilder = (response) => (b) => {
-    console.log(`${response.event_details.invalid_option_text}\n\nDigite somente a *primeira parte* da opção desejada:\n${optionReplyBuilder(response)}`);
+    b.respond(`${response.event_details.invalid_option_text}\n\nDigite somente a *primeira parte* da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
 const redirectFallbackBuilder = (response) => (b) => {
-    console.log(`Aguarde um pouco, em breve alguém vai te atender`);
+    b.respond(`Aguarde um pouco, em breve alguém vai te atender`);
 };
 
 exports.resetCallbackBuilder = resetCallbackBuilder;
