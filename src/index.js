@@ -34,7 +34,7 @@ const runBot = async () => {
             b.bot.memory.unset(b.message.user.room.id);
             bot.adapters.message.api.post('rooms.setCustomFields', {
                 rid: b.user.room.id,
-                data: { departmentQueue: null }
+                data: { departmentQueue: "" }
             });
             b.respond("✅");
         }, 
