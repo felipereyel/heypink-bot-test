@@ -7,7 +7,7 @@ const optionReplyBuilder = (response) => response.child_messages.map(r => `*${r.
 
 const optionsCallbackBuilder = (response) => (b) => {
     b.bot.memory.set(b.message.user.room.id, { id: response.id, created_at: Date.now() });
-    b.respond(`${response.message}\n\nDigite somente a primeira parte da opção desejada:\n${optionReplyBuilder(response)}`);
+    b.respond(`${response.message}\n\nDigite somente o número da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
 const endCallbackBuilder = (response) => (b) => {
@@ -30,7 +30,7 @@ const redirectCallbackBuilder = (response) => (b) => {
 };
 
 const optionsFallbackBuilder = (response) => (b) => {
-    b.respond(`${response.event_details.invalid_option_text}\n\nDigite somente a *primeira parte* da opção desejada:\n${optionReplyBuilder(response)}`);
+    b.respond(`${response.event_details.invalid_option_text}\n\nDigite somente *o número* da opção desejada:\n${optionReplyBuilder(response)}`);
 };
 
 const redirectFallbackBuilder = (response) => (b) => {

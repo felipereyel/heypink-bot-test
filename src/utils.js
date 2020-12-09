@@ -2,7 +2,7 @@ const moment = require("moment-timezone");
 
 const daysOfWeek = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
 
-const iMatch = (str, exp) => str ? str.match(new RegExp(exp, "i")) : false;
+const iMatch = (str, exp) => str ? str.match(new RegExp(`\\b${exp}\\b`, "i")) : false;
 
 const availabilityChecker = (weeklyvailability) => {
     // "09:00/17:00", "09:00/17:00, sex@09:00/15:00" or "09:00/17:00, qui@09:00/15:00, sex@09:00/15:00"
