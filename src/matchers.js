@@ -3,6 +3,7 @@ const bot = require('bbot');
 const { iMatch } = require("./utils");
 
 const notDirectMatcher = (message) => {
+    // purge de mensagens de adm
     return message.event === "enter" || message.event === "leave";
 };
 
